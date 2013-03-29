@@ -1,0 +1,7 @@
+ipch
+Debug
+*.log
+*.lastbuildstate
+*.obj
+*.idb
+*.pdb
