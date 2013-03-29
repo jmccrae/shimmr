@@ -565,6 +565,24 @@ namespace shimmrType {
 		return val;
 	}
 
+	FunctionType::FunctionType(TypeSystem* s,const std::shared_ptr<Type> r,const std::vector<std::shared_ptr<Type>>& a) :
+		Type(s), _returnType(r), _argTypes(a) {
+		_symbol.append("(");
+		if(!a.empty()) {
+			auto it = a.begin();
+			_symbol.append((*it)->symbol());
+			for(++it; it != a.end(); ++it) {
+				_symbol.append(",");
+				_symbol.append((*it)->symbol());
+			}
+		}
+		_symbol.append(")=>");
+		_symbol.append(r->symbol());
+	}
+		
+	const std::string& FunctionType::symbol() const {
+		return _symbol;
+	}
 
 	TypeSystem::TypeSystem() : typeTable(),
 		Int(new IntType(this)),
@@ -637,6 +655,12 @@ namespace shimmrType {
 	const shared_ptr<Type> TypeSystem::makeVector(const shared_ptr<Type> content, const shared_ptr<Type> index) {
 		auto ut = new VectorType(this,content,index);
 		const shared_ptr<Type> sp(ut);
+		return registerType(sp);
+	}
+
+	const shared_ptr<Type> TypeSystem::makeFunction(const shared_ptr<Type> returnType, const vector<shared_ptr<Type>>& args) {
+		auto ft = new FunctionType(this,returnType,args);
+		const shared_ptr<Type> sp(ft);
 		return registerType(sp);
 	}
 }

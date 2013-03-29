@@ -24,5 +24,13 @@
     <ClCompile Include="type_axioms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scoper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

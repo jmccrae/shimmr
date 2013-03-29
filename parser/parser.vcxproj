@@ -78,6 +78,8 @@
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="Printer.cpp" />
+    <ClCompile Include="scope.cpp" />
+    <ClCompile Include="scope_inferer.cpp" />
     <ClCompile Include="Test.cpp" />
     <ClCompile Include="type.cpp" />
   </ItemGroup>
@@ -85,6 +87,8 @@
     <ClInclude Include="Absyn.H" />
     <ClInclude Include="Parser.H" />
     <ClInclude Include="Printer.H" />
+    <ClInclude Include="scope.h" />
+    <ClInclude Include="scope_inferer.h" />
     <ClInclude Include="Skeleton.H" />
     <ClInclude Include="type.h" />
   </ItemGroup>

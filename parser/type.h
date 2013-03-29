@@ -210,6 +210,17 @@ namespace shimmrType {
 		virtual std::shared_ptr<Type> merge(const std::shared_ptr<Type>) const;
 	};
 
+	class FunctionType : public Type {
+		friend TypeSystem;
+	private:
+		std::string _symbol;
+		std::shared_ptr<Type> _returnType;
+		std::vector<std::shared_ptr<Type>> _argTypes;
+		FunctionType(TypeSystem*,const std::shared_ptr<Type>,const std::vector<std::shared_ptr<Type>>&);
+	public:
+		virtual const std::string& symbol() const;
+	};
+
 	class TypeSystem {
 	private:
 		std::map<const std::string,const std::shared_ptr<Type>> typeTable;
@@ -231,6 +242,7 @@ namespace shimmrType {
 		const std::shared_ptr<Type> makeSet(const std::set<const std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
 		const std::shared_ptr<Type> makeRange(const int,const int);
 		const std::shared_ptr<Type> makeVector(const std::shared_ptr<Type>, const std::shared_ptr<Type>);
+		const std::shared_ptr<Type> makeFunction(const std::shared_ptr<Type>, const std::vector<std::shared_ptr<Type>>&);
 	};
 
 }
