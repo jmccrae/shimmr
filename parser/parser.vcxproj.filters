@@ -39,7 +39,10 @@
     <ClCompile Include="scope.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scope_inferer.cpp">
+    <ClCompile Include="type_checker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scope_inferrer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,7 +65,10 @@
     <ClInclude Include="scope.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scope_inferer.h">
+    <ClInclude Include="type_checker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scope_inferrer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

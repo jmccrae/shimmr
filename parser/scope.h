@@ -12,32 +12,16 @@
 namespace shimmr {
 	class Scope;
 
-	class DeclarationPoint {
-	};
-
-	class DeclDP : public DeclarationPoint {
-	public:
-		Decl *decl;
-		DeclDP(Decl *d) : decl(d) { }
-	};
-
-	class ArgDP : public DeclarationPoint {
-	public:
-		ArgumentDef *argDef;
-		ArgDP(ArgumentDef *d) : argDef(d) { }
-	};
-
 	class ScopeElement {
 	private:
 		std::shared_ptr<shimmrType::Type> _type;
-		std::shared_ptr<DeclarationPoint> _decl;
 	protected:
 		Scope *scope;
 		ScopeElement(Scope *);
 	public:
-		ScopeElement(Scope *, std::shared_ptr<shimmrType::Type>, std::shared_ptr<DeclarationPoint>);
+		Visitable *const declarationPoint;
+		ScopeElement(Scope *, std::shared_ptr<shimmrType::Type>, Visitable *);
 		virtual std::shared_ptr<shimmrType::Type> type();
-		virtual std::shared_ptr<DeclarationPoint> decl();
 		virtual void updateType(std::shared_ptr<shimmrType::Type>);
 		virtual bool isScopeValid();
 	};
@@ -67,8 +51,8 @@ namespace shimmr {
 		std::shared_ptr<shimmrType::TypeSystem> typeSystem;
 		Scope *parent;
 		std::map<std::string,std::shared_ptr<ScopeElement>> scopeElements;
-		std::vector<std::shared_ptr<Scope>> children;
-		std::shared_ptr<Scope> makeChildScope();
+		std::map<Visitable*,std::shared_ptr<Scope>> children;
+		std::shared_ptr<Scope> makeChildScope(Visitable*);
 		std::shared_ptr<ScopeElement> resolve(const std::string& name);
 		void assign(std::shared_ptr<ScopeElement> elem, const std::string& name);
 		static std::shared_ptr<Scope> root();

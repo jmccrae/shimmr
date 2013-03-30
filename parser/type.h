@@ -21,6 +21,7 @@ namespace shimmrType {
 		virtual const std::string& symbol() const = 0;
 		virtual const std::shared_ptr<Type> or(const std::shared_ptr<Type>) const;
 		virtual bool isSuperclassOf(const std::shared_ptr<Type>) const;
+		inline bool isSuperclassOrEqual(const std::shared_ptr<Type> t) const { return isEqual(t) || isSuperclassOf(t); }
 		virtual bool isEqual(const std::shared_ptr<Type>) const;
 		virtual bool isError() const;
 		virtual bool isCollection() const;

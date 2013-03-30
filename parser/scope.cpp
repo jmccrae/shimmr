@@ -11,10 +11,10 @@ namespace shimmr {
 		}
 	}
 
-	std::shared_ptr<Scope> Scope::makeChildScope() {
+	std::shared_ptr<Scope> Scope::makeChildScope(Visitable *v) {
 		auto scope = new Scope(this);
 		shared_ptr<Scope> sp(scope);
-		children.push_back(sp);
+		children[v] = sp;
 		return sp;
 	}
 
@@ -66,17 +66,17 @@ namespace shimmr {
 			}
 		}
 		for(auto it = children.begin(); it != children.end(); ++it) {
-			if(!(*it)->isScopeValid()) {
+			if(!(*it).second->isScopeValid()) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	ScopeElement::ScopeElement(Scope *s, shared_ptr<shimmrType::Type> t, std::shared_ptr<DeclarationPoint> d) : scope(s), _type(t), _decl(d) {
+	ScopeElement::ScopeElement(Scope *s, shared_ptr<shimmrType::Type> t, Visitable *v) : scope(s), _type(t), declarationPoint(v) {
 	}
 
-	ScopeElement::ScopeElement(Scope *s) : scope(s), _type(nullptr), _decl(nullptr) {
+	ScopeElement::ScopeElement(Scope *s) : scope(s), _type(nullptr), declarationPoint(nullptr) {
 	}
 
 	shared_ptr<shimmrType::Type> ScopeElement::type() {
@@ -87,10 +87,6 @@ namespace shimmr {
 		_type = t;
 	}
 	
-	std::shared_ptr<DeclarationPoint> ScopeElement::decl() {
-		return _decl;
-	}
-
 	bool ScopeElement::isScopeValid() {
 		return _type == nullptr || !_type->isError();
 	}
