@@ -46,6 +46,10 @@ namespace shimmrType {
 	bool Type::isRange() const {
 		return false;
 	}
+
+	bool Type::isFunction() const {
+		return false;
+	}
 	
 	bool Type::canMerge(const shared_ptr<Type> t) const {
 		return isSuperclassOf(t) || t->isSuperclassOf(sys->get(symbol()));
@@ -66,6 +70,14 @@ namespace shimmrType {
 		auto s = make_shared<set<string>>();
 		s->insert(symbol());
 		return s;
+	}
+		
+	shared_ptr<Type> Type::contentType() const {
+		return nullptr;
+	}
+
+	shared_ptr<Type> Type::indexType() const {
+		return nullptr;
 	}
 
 	PrimitiveType::PrimitiveType(TypeSystem *s,const string& n) : Type(s), name(n) {
@@ -92,7 +104,13 @@ namespace shimmrType {
 	}
 
 	bool NumericType::isSuperclassOf(const shared_ptr<Type> t) const {
-		return t->symbol().compare("Int") == 0 || t->symbol().compare("Float") == 0;
+		if(t->symbol().compare("Int") == 0 || t->symbol().compare("Float") == 0 || t->isRange()) {
+			return true;
+		} else if(t->isSet()) {
+			return sys->Int->isSuperclassOf(t) || sys->Float->isSuperclassOf(t);
+		} else {
+			return false;
+		}
 	}
 
 	IntType::IntType(TypeSystem *s) : PrimitiveType(s,"Int") {
@@ -213,6 +231,14 @@ namespace shimmrType {
 		return true;
 	}
 
+	shared_ptr<Type> VectorType::contentType() const {
+		return content;
+	}
+
+	shared_ptr<Type> VectorType::indexType() const {
+		return index;
+	}
+
 	ErrorType::ErrorType(TypeSystem*s,const string& msg) : Type(s) {
 		messages.push_back(msg);
 	}
@@ -270,6 +296,14 @@ namespace shimmrType {
 
 	bool ErrorType::isError() const {
 		return true;
+	}
+
+	shared_ptr<Type> ErrorType::contentType() const {
+		return sys->get(symbol());
+	}
+
+	shared_ptr<Type> ErrorType::indexType() const {
+		return sys->get(symbol());
 	}
 	
 	bool compareTypeValue(const std::shared_ptr<TypeValue> &s, const std::shared_ptr<TypeValue>&t) {
@@ -425,6 +459,18 @@ namespace shimmrType {
 	bool SetType::isSet() const {
 		return true;
 	}
+	
+	bool SetType::isCollection() const {
+		return true;
+	}
+
+	shared_ptr<Type> SetType::contentType() const {
+		return sys->get(_symbol);
+	}
+
+	shared_ptr<Type> SetType::indexType() const {
+		return sys->get(_symbol);
+	}
 
 	
 	RangeType::RangeType(TypeSystem*s,const int lowerBound, const int upperBound) : Type(s), lb(lowerBound), ub(upperBound) {
@@ -496,6 +542,18 @@ namespace shimmrType {
 
 	bool RangeType::isRange() const {
 		return true;
+	}
+
+	bool RangeType::isCollection() const {
+		return true;
+	}
+
+	shared_ptr<Type> RangeType::contentType() const {
+		return sys->get(_symbol);
+	}
+
+	shared_ptr<Type> RangeType::indexType() const {
+		return sys->get(_symbol);
 	}
 
 	const string& TypeValue::stringValue() const {
@@ -584,6 +642,18 @@ namespace shimmrType {
 		return _symbol;
 	}
 
+	bool FunctionType::isFunction() const {
+		return true;
+	}
+
+	const shared_ptr<Type> FunctionType::returnType() const {
+		return _returnType;
+	}
+
+	const vector<shared_ptr<Type>>& FunctionType::argTypes() const {
+		return _argTypes;
+	}
+
 	TypeSystem::TypeSystem() : typeTable(),
 		Int(new IntType(this)),
 		Float(new FloatType(this)),
@@ -634,8 +704,8 @@ namespace shimmrType {
 		return registerType(sp);
 	}
 
-	const shared_ptr<Type> TypeSystem::makeError(const string& msg) {
-		auto et = new ErrorType(this,msg);
+	const shared_ptr<Type> TypeSystem::makeError(const int linenumber, const string& msg) {
+		auto et = new ErrorType(this,"Line " + to_string(linenumber) + ": " + msg);
 		const shared_ptr<Type> sp(et);
 		return sp;
 	}
@@ -653,14 +723,36 @@ namespace shimmrType {
 	}
 
 	const shared_ptr<Type> TypeSystem::makeVector(const shared_ptr<Type> content, const shared_ptr<Type> index) {
-		auto ut = new VectorType(this,content,index);
-		const shared_ptr<Type> sp(ut);
-		return registerType(sp);
+		if(content->isError() && index->isError()) {
+			return content->or(index);
+		} else if(content->isError()) {
+			return content;
+		} else if(index->isError()) {
+			return index;
+		} else {
+			auto ut = new VectorType(this,content,index);
+			const shared_ptr<Type> sp(ut);
+			return registerType(sp);
+		}
 	}
 
 	const shared_ptr<Type> TypeSystem::makeFunction(const shared_ptr<Type> returnType, const vector<shared_ptr<Type>>& args) {
-		auto ft = new FunctionType(this,returnType,args);
-		const shared_ptr<Type> sp(ft);
-		return registerType(sp);
+		shared_ptr<Type> err = Unit;
+		for(auto t : args) {
+			if(t->isError()) {
+				err = err->or(t);
+			}
+		}
+		if(returnType->isError() && err->isError()) {
+			return returnType->or(err);
+		} else if(returnType->isError()) {
+			return returnType;
+		} else if(err->isError()) {
+			return err;
+		} else {
+			auto ft = new FunctionType(this,returnType,args);
+			const shared_ptr<Type> sp(ft);
+			return registerType(sp);
+		}
 	}
 }

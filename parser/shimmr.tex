@@ -61,12 +61,12 @@ The symbols used in shimmr are the following: \\
 \begin{tabular}{lll}
 {\symb{\{}} &{\symb{\}}} &{\symb{;}} \\
 {\symb{{$=$}}} &{\symb{(}} &{\symb{)}} \\
-{\symb{{$|$}{$|$}}} &{\symb{\&\&}} &{\symb{{$=$}{$=$}}} \\
-{\symb{!{$=$}}} &{\symb{{$<$}{$=$}}} &{\symb{{$>$}{$=$}}} \\
-{\symb{{$<$}}} &{\symb{{$>$}}} &{\symb{{$+$}}} \\
-{\symb{{$-$}}} &{\symb{*}} &{\symb{/}} \\
-{\symb{!}} &{\symb{,}} &{\symb{[}} \\
-{\symb{]}} &{\symb{:}} & \\
+{\symb{{$|$}{$|$}}} &{\symb{\&\&}} &{\symb{!{$=$}}} \\
+{\symb{{$<$}{$=$}}} &{\symb{{$>$}{$=$}}} &{\symb{{$<$}}} \\
+{\symb{{$>$}}} &{\symb{{$+$}}} &{\symb{{$-$}}} \\
+{\symb{*}} &{\symb{/}} &{\symb{!}} \\
+{\symb{[}} &{\symb{]}} &{\symb{,}} \\
+{\symb{:}} & & \\
 \end{tabular}\\
 
 \subsection*{Comments}
@@ -99,8 +99,7 @@ All other symbols are terminals.\\
  & {\delimit}  &{\terminal{if}} {\terminal{(}} {\nonterminal{Exp}} {\terminal{)}} {\nonterminal{StatementBlock}} {\nonterminal{ElseBlock}}  \\
  & {\delimit}  &{\terminal{some}} {\terminal{(}} {\nonterminal{Ident}} {\terminal{in}} {\nonterminal{Exp}} {\terminal{)}} {\nonterminal{StatementBlock}}  \\
  & {\delimit}  &{\terminal{some}} {\terminal{(}} {\nonterminal{Ident}} {\terminal{in}} {\nonterminal{Exp}} {\terminal{)}} {\nonterminal{StatementBlock}} {\nonterminal{ElseBlock}}  \\
- & {\delimit}  &{\nonterminal{LExpr}} {\terminal{{$=$}}} {\nonterminal{Exp}} {\terminal{with}} {\nonterminal{Exp}}  \\
- & {\delimit}  &{\nonterminal{LExpr}} {\terminal{{$=$}}} {\nonterminal{Exp}}  \\
+ & {\delimit}  &{\nonterminal{Exp}} {\terminal{with}} {\nonterminal{Exp}}  \\
  & {\delimit}  &{\nonterminal{Exp}}  \\
 \end{tabular}\\
 
@@ -132,7 +131,7 @@ All other symbols are terminals.\\
 \end{tabular}\\
 
 \begin{tabular}{lll}
-{\nonterminal{Exp2}} & {\arrow}  &{\nonterminal{Exp2}} {\terminal{{$=$}{$=$}}} {\nonterminal{Exp3}}  \\
+{\nonterminal{Exp2}} & {\arrow}  &{\nonterminal{Exp2}} {\terminal{{$=$}}} {\nonterminal{Exp3}}  \\
  & {\delimit}  &{\nonterminal{Exp2}} {\terminal{!{$=$}}} {\nonterminal{Exp3}}  \\
  & {\delimit}  &{\nonterminal{Exp3}}  \\
 \end{tabular}\\
@@ -164,6 +163,7 @@ All other symbols are terminals.\\
 
 \begin{tabular}{lll}
 {\nonterminal{Exp7}} & {\arrow}  &{\nonterminal{Ident}}  \\
+ & {\delimit}  &{\nonterminal{Ident}} {\terminal{[}} {\nonterminal{ListExp}} {\terminal{]}}  \\
  & {\delimit}  &{\nonterminal{Ident}} {\terminal{(}} {\nonterminal{ListExp}} {\terminal{)}}  \\
  & {\delimit}  &{\nonterminal{Integer}}  \\
  & {\delimit}  &{\nonterminal{Double}}  \\
@@ -204,11 +204,6 @@ All other symbols are terminals.\\
 {\nonterminal{ListSetTypeElem}} & {\arrow}  &{\emptyP} \\
  & {\delimit}  &{\nonterminal{SetTypeElem}}  \\
  & {\delimit}  &{\nonterminal{SetTypeElem}} {\terminal{,}} {\nonterminal{ListSetTypeElem}}  \\
-\end{tabular}\\
-
-\begin{tabular}{lll}
-{\nonterminal{LExpr}} & {\arrow}  &{\nonterminal{Ident}}  \\
- & {\delimit}  &{\nonterminal{LExpr}} {\terminal{[}} {\nonterminal{ListExp}} {\terminal{]}}  \\
 \end{tabular}\\
 
 

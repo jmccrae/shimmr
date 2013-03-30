@@ -38,7 +38,6 @@ namespace shimmr {
 		virtual void visitSomeStatement(SomeStatement *p);
 		virtual void visitSomeElseStatement(SomeElseStatement *p);
 		virtual void visitConditionalStatement(ConditionalStatement *p);
-		virtual void visitAbsoluteStatement(AbsoluteStatement *p);
 		virtual void visitExpAsStatement(ExpAsStatement *p);
 		virtual void visitEOr(EOr *p);
 		virtual void visitEAnd(EAnd *p);
@@ -69,8 +68,6 @@ namespace shimmr {
 		virtual void visitEFloatSTE(EFloatSTE *p);
 		virtual void visitEStringSTE(EStringSTE *p);
 		virtual void visitListSetTypeElem(ListSetTypeElem *p);
-		virtual void visitVarAsLExpr(VarAsLExpr *p);
-		virtual void visitVectorAsLExpr(VectorAsLExpr *p);
 		virtual void visitProgram(Program *p);
 		virtual void visitStatementBlock(StatementBlock *p);
 		virtual void visitStatement(Statement *p);
@@ -80,7 +77,8 @@ namespace shimmr {
 		virtual void visitArgument(Argument *p);
 		virtual void visitType(Type *p);
 		virtual void visitSetTypeElem(SetTypeElem *p);
-		virtual void visitLExpr(LExpr *p);
+		virtual void visitIdent(Ident);
+		virtual void visitEVector(EVector *p);
 
 		virtual void visitInteger(Integer i);
 		virtual void visitDouble(Double d);

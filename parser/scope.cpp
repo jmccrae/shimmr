@@ -97,7 +97,7 @@ namespace shimmr {
 	shared_ptr<shimmrType::Type> UndefinedScopeElement::type() {
 		std::string msg("Undefined reference to id: ");
 		msg.append(_name);
-		return scope->typeSystem->makeError(msg);
+		return scope->typeSystem->makeError(-1,msg);
 	}
 
 
@@ -108,7 +108,7 @@ namespace shimmr {
 		std::string msg("Multiple declarations as [");
 		msg.append(first->type()->symbol() + "," + second->type()->symbol());
 		msg.append("]");
-		return scope->typeSystem->makeError(msg);
+		return scope->typeSystem->makeError(-1,msg);
 	}
 
 	bool DuplicateDeclaration::isScopeValid() {

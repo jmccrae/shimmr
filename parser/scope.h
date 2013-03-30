@@ -24,6 +24,7 @@ namespace shimmr {
 		virtual std::shared_ptr<shimmrType::Type> type();
 		virtual void updateType(std::shared_ptr<shimmrType::Type>);
 		virtual bool isScopeValid();
+		virtual bool isDefined() { return true; }
 	};
 	
 	class UndefinedScopeElement : public ScopeElement {
@@ -31,6 +32,7 @@ namespace shimmr {
 		const std::string _name;
 		UndefinedScopeElement(Scope*, const std::string &n);
 		std::shared_ptr<shimmrType::Type> type();
+		virtual bool isDefined() { return false; }
 	};
 
 	class DuplicateDeclaration : public ScopeElement {
@@ -40,6 +42,7 @@ namespace shimmr {
 		DuplicateDeclaration(Scope*, std::shared_ptr<ScopeElement> f,  std::shared_ptr<ScopeElement> s);
 		std::shared_ptr<shimmrType::Type> type();
 		virtual bool isScopeValid();
+		virtual bool isDefined() { return false; }
 	};
 	
 	class Scope 

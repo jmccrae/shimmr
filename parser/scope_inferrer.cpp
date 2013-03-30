@@ -26,26 +26,20 @@ namespace shimmr {
 
 
 	void ScopeInferrer::visitStatements(Statements *p) {
-		ListStatement *ls = p->liststatement_;
-		while(ls != nullptr) {
-			ls->statement_->accept(this);
-			ls = ls->liststatement_;
-		}
+		p->liststatement_->accept(this);
 	}
 
 	void ScopeInferrer::visitStatementBlockStat(StatementBlockStat *p) {
 		auto childScope = current->makeChildScope(p);
 		current = childScope.get();
-		ListStatement *ls = p->liststatement_;
-		while(ls != nullptr) {
-			ls->statement_->accept(this);
-			ls = ls->liststatement_;
-		}
+		p->liststatement_->accept(this);
 		current = childScope->parent;
 	}
 
 	void ScopeInferrer::visitListStatement(ListStatement *p) {
-		// Skipped
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			(*it)->accept(this);
+		}
 	}
 
 	void ScopeInferrer::visitDeclStat(DeclStat *p) {
@@ -138,6 +132,11 @@ namespace shimmr {
 		p->exp_->accept(this);
 		auto s = current->makeChildScope(p);
 		current = s.get();
+
+		auto elem = make_shared<ScopeElement>(current,nullptr,p);
+		string varName(p->ident_);
+		current->assign(elem,varName);
+
 		p->statementblock_->accept(this);
 		current = current->parent;
 	}
@@ -193,6 +192,11 @@ namespace shimmr {
 		p->exp_->accept(this);
 		auto s = current->makeChildScope(p);
 		current = s.get();
+
+		auto elem = make_shared<ScopeElement>(current,nullptr,p);
+		string varName(p->ident_);
+		current->assign(elem,varName);
+
 		p->statementblock_->accept(this);
 		current = current->parent;
 	}
@@ -201,6 +205,11 @@ namespace shimmr {
 		p->exp_->accept(this);
 		auto s = current->makeChildScope(p);
 		current = s.get();
+
+		auto elem = make_shared<ScopeElement>(current,nullptr,p);
+		string varName(p->ident_);
+		current->assign(elem,varName);
+
 		p->statementblock_->accept(this);
 		current = current->parent;
 		p->elseblock_->accept(this);
@@ -211,11 +220,7 @@ namespace shimmr {
 		p->exp_1->accept(this);
 		p->exp_2->accept(this);
 	}
-
-	void ScopeInferrer::visitAbsoluteStatement(AbsoluteStatement *p) {
-		p->exp_->accept(this);
-	}
-
+	
 	void ScopeInferrer::visitExpAsStatement(ExpAsStatement *p) {
 		p->exp_->accept(this);
 
@@ -316,9 +321,8 @@ namespace shimmr {
 	}
 
 	void ScopeInferrer::visitListArgument(ListArgument *p) {
-		p->argument_->accept(this);
-		if(p->listargument_ != nullptr) {
-			p->listargument_->accept(this);
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			(*it)->accept(this);
 		}
 	}
 
@@ -335,9 +339,8 @@ namespace shimmr {
 	}
 
 	void ScopeInferrer::visitListExp(ListExp *p) {
-		p->exp_->accept(this);
-		if(p->listexp_ != nullptr) {
-			p->listexp_->accept(this);
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			(*it)->accept(this);
 		}
 	}
 
@@ -348,7 +351,7 @@ namespace shimmr {
 		} else {
 			string errMsg("Undefined type: ");
 			errMsg.append(p->ident_);
-			typeStack.push(current->typeSystem->makeError(errMsg));
+			typeStack.push(current->typeSystem->makeError(p->line_number,errMsg));
 		}
 	}
 
@@ -380,13 +383,21 @@ namespace shimmr {
 			msg.append(to_string(p->integer_1));
 			msg.append(" to ");
 			msg.append(to_string(p->integer_2));
-			auto type = current->typeSystem->makeError(msg);
+			auto type = current->typeSystem->makeError(p->line_number,msg);
 			typeStack.push(type);
 		}
 	}
 
 	void ScopeInferrer::visitSetType(SetType *p) {
+		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
+		int e = typeValueStack.size();
+		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		for(; i < e; i++) {
+			values.insert(typeValueStack.top());
+			typeValueStack.pop();
+		}
+		typeStack.push(current->typeSystem->makeSet(values));
 	}
 
 	void ScopeInferrer::visitEIntSTE(EIntSTE *p) {
@@ -406,17 +417,16 @@ namespace shimmr {
 	}
 
 	void ScopeInferrer::visitListSetTypeElem(ListSetTypeElem *p) {
-		p->settypeelem_->accept(this);
-		if(p->listsettypeelem_ != nullptr) {
-			p->listsettypeelem_->accept(this);
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			(*it)->accept(this);
 		}
 	}
-
-	void ScopeInferrer::visitVarAsLExpr(VarAsLExpr *p) {
+		
+	void ScopeInferrer::visitIdent(Ident p) {
 
 	}
 
-	void ScopeInferrer::visitVectorAsLExpr(VectorAsLExpr *p) {
+	void ScopeInferrer::visitEVector(EVector *p) {
 
 	}
 
@@ -455,11 +465,6 @@ namespace shimmr {
 	void ScopeInferrer::visitSetTypeElem(SetTypeElem *p) {
 
 	}
-
-	void ScopeInferrer::visitLExpr(LExpr *p) {
-
-	}
-
 
 	void ScopeInferrer::visitInteger(Integer i) {
 

@@ -15,7 +15,7 @@ int yywrap(void)
 }
 void yyerror(const char *str)
 {
-  std::cout << "line " << yy_mylinenumber + 1 << std::endl ;
+  std::cout << "line " << yy_mylinenumber << std::endl ;
   fprintf(stderr,"error: %s\n",str);
 }
 
@@ -23,6 +23,7 @@ void yyerror(const char *str)
 Program* YY_RESULT_Program_ = 0;
 Program* pProgram(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -37,6 +38,7 @@ Program* pProgram(FILE *inp)
 StatementBlock* YY_RESULT_StatementBlock_ = 0;
 StatementBlock* pStatementBlock(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -51,6 +53,7 @@ StatementBlock* pStatementBlock(FILE *inp)
 ListStatement* YY_RESULT_ListStatement_ = 0;
 ListStatement* pListStatement(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -65,6 +68,7 @@ ListStatement* pListStatement(FILE *inp)
 Statement* YY_RESULT_Statement_ = 0;
 Statement* pStatement(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -79,6 +83,7 @@ Statement* pStatement(FILE *inp)
 Decl* YY_RESULT_Decl_ = 0;
 Decl* pDecl(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -93,6 +98,7 @@ Decl* pDecl(FILE *inp)
 ElseBlock* YY_RESULT_ElseBlock_ = 0;
 ElseBlock* pElseBlock(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -107,6 +113,7 @@ ElseBlock* pElseBlock(FILE *inp)
 Exp* YY_RESULT_Exp_ = 0;
 Exp* pExp(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -121,6 +128,7 @@ Exp* pExp(FILE *inp)
 Argument* YY_RESULT_Argument_ = 0;
 Argument* pArgument(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -135,6 +143,7 @@ Argument* pArgument(FILE *inp)
 ListArgument* YY_RESULT_ListArgument_ = 0;
 ListArgument* pListArgument(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -149,6 +158,7 @@ ListArgument* pListArgument(FILE *inp)
 ListExp* YY_RESULT_ListExp_ = 0;
 ListExp* pListExp(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -163,6 +173,7 @@ ListExp* pListExp(FILE *inp)
 Type* YY_RESULT_Type_ = 0;
 Type* pType(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -177,6 +188,7 @@ Type* pType(FILE *inp)
 SetTypeElem* YY_RESULT_SetTypeElem_ = 0;
 SetTypeElem* pSetTypeElem(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -191,6 +203,7 @@ SetTypeElem* pSetTypeElem(FILE *inp)
 ListSetTypeElem* YY_RESULT_ListSetTypeElem_ = 0;
 ListSetTypeElem* pListSetTypeElem(FILE *inp)
 {
+  yy_mylinenumber = 1;
   initialize_lexer(inp);
   if (yyparse())
   { /* Failure */
@@ -202,73 +215,6 @@ ListSetTypeElem* pListSetTypeElem(FILE *inp)
   }
 }
 
-LExpr* YY_RESULT_LExpr_ = 0;
-LExpr* pLExpr(FILE *inp)
-{
-  initialize_lexer(inp);
-  if (yyparse())
-  { /* Failure */
-    return 0;
-  }
-  else
-  { /* Success */
-    return YY_RESULT_LExpr_;
-  }
-}
-
-
-ListStatement* reverseListStatement(ListStatement *l)
-{
-  ListStatement *prev = 0;
-  ListStatement *tmp = 0;
-  while (l)
-  {
-    tmp = l->liststatement_;
-    l->liststatement_ = prev;
-    prev = l;
-    l = tmp;
-  }
-  return prev;
-}
-ListArgument* reverseListArgument(ListArgument *l)
-{
-  ListArgument *prev = 0;
-  ListArgument *tmp = 0;
-  while (l)
-  {
-    tmp = l->listargument_;
-    l->listargument_ = prev;
-    prev = l;
-    l = tmp;
-  }
-  return prev;
-}
-ListExp* reverseListExp(ListExp *l)
-{
-  ListExp *prev = 0;
-  ListExp *tmp = 0;
-  while (l)
-  {
-    tmp = l->listexp_;
-    l->listexp_ = prev;
-    prev = l;
-    l = tmp;
-  }
-  return prev;
-}
-ListSetTypeElem* reverseListSetTypeElem(ListSetTypeElem *l)
-{
-  ListSetTypeElem *prev = 0;
-  ListSetTypeElem *tmp = 0;
-  while (l)
-  {
-    tmp = l->listsettypeelem_;
-    l->listsettypeelem_ = prev;
-    prev = l;
-    l = tmp;
-  }
-  return prev;
-}
 
 %}
 
@@ -291,7 +237,6 @@ ListSetTypeElem* reverseListSetTypeElem(ListSetTypeElem *l)
   Type* type_;
   SetTypeElem* settypeelem_;
   ListSetTypeElem* listsettypeelem_;
-  LExpr* lexpr_;
 
 }
 
@@ -304,30 +249,29 @@ ListSetTypeElem* reverseListSetTypeElem(ListSetTypeElem *l)
 %token _SYMB_5    //   )
 %token _SYMB_6    //   ||
 %token _SYMB_7    //   &&
-%token _SYMB_8    //   ==
-%token _SYMB_9    //   !=
-%token _SYMB_10    //   <=
-%token _SYMB_11    //   >=
-%token _SYMB_12    //   <
-%token _SYMB_13    //   >
-%token _SYMB_14    //   +
-%token _SYMB_15    //   -
-%token _SYMB_16    //   *
-%token _SYMB_17    //   /
-%token _SYMB_18    //   !
-%token _SYMB_19    //   ,
-%token _SYMB_20    //   [
-%token _SYMB_21    //   ]
-%token _SYMB_22    //   :
-%token _SYMB_23    //   def
-%token _SYMB_24    //   else
-%token _SYMB_25    //   fail
-%token _SYMB_26    //   for
-%token _SYMB_27    //   if
-%token _SYMB_28    //   in
-%token _SYMB_29    //   some
-%token _SYMB_30    //   val
-%token _SYMB_31    //   with
+%token _SYMB_8    //   !=
+%token _SYMB_9    //   <=
+%token _SYMB_10    //   >=
+%token _SYMB_11    //   <
+%token _SYMB_12    //   >
+%token _SYMB_13    //   +
+%token _SYMB_14    //   -
+%token _SYMB_15    //   *
+%token _SYMB_16    //   /
+%token _SYMB_17    //   !
+%token _SYMB_18    //   [
+%token _SYMB_19    //   ]
+%token _SYMB_20    //   ,
+%token _SYMB_21    //   :
+%token _SYMB_22    //   def
+%token _SYMB_23    //   else
+%token _SYMB_24    //   fail
+%token _SYMB_25    //   for
+%token _SYMB_26    //   if
+%token _SYMB_27    //   in
+%token _SYMB_28    //   some
+%token _SYMB_29    //   val
+%token _SYMB_30    //   with
 
 %type <program_> Program
 %type <statementblock_> StatementBlock
@@ -349,7 +293,6 @@ ListSetTypeElem* reverseListSetTypeElem(ListSetTypeElem *l)
 %type <type_> Type
 %type <settypeelem_> SetTypeElem
 %type <listsettypeelem_> ListSetTypeElem
-%type <lexpr_> LExpr
 
 %token<string_> _STRING_
 %token<int_> _INTEGER_
@@ -357,95 +300,92 @@ ListSetTypeElem* reverseListSetTypeElem(ListSetTypeElem *l)
 %token<string_> _IDENT_
 
 %%
-Program : ListStatement { $$ = new Statements($1); YY_RESULT_Program_= $$; } 
+Program : ListStatement {  std::reverse($1->begin(),$1->end()) ;$$ = new Statements($1); $$->line_number = yy_mylinenumber; YY_RESULT_Program_= $$; } 
 ;
-StatementBlock : _SYMB_0 ListStatement _SYMB_1 { $$ = new StatementBlockStat($2); YY_RESULT_StatementBlock_= $$; } 
+StatementBlock : _SYMB_0 ListStatement _SYMB_1 {  std::reverse($2->begin(),$2->end()) ;$$ = new StatementBlockStat($2); $$->line_number = yy_mylinenumber; YY_RESULT_StatementBlock_= $$; } 
 ;
-ListStatement : /* empty */ { $$ = 0; YY_RESULT_ListStatement_= $$; } 
-  | Statement { $$ = new ListStatement($1); YY_RESULT_ListStatement_= $$; }
-  | Statement _SYMB_2 ListStatement { $$ = new ListStatement($1, $3); YY_RESULT_ListStatement_= $$; }
+ListStatement : /* empty */ {  $$ = new ListStatement(); YY_RESULT_ListStatement_= $$; } 
+  | Statement {  $$ = new ListStatement() ; $$->push_back($1); YY_RESULT_ListStatement_= $$; }
+  | Statement _SYMB_2 ListStatement {  $3->push_back($1) ; $$ = $3 ; YY_RESULT_ListStatement_= $$; }
 ;
-Statement : Decl { $$ = new DeclStat($1); YY_RESULT_Statement_= $$; } 
-  | _SYMB_26 _SYMB_4 _IDENT_ _SYMB_28 Exp _SYMB_5 StatementBlock { $$ = new ForStatement($3, $5, $7); YY_RESULT_Statement_= $$; }
-  | _SYMB_27 _SYMB_4 Exp _SYMB_5 StatementBlock { $$ = new IfStatement($3, $5); YY_RESULT_Statement_= $$; }
-  | _SYMB_27 _SYMB_4 Exp _SYMB_5 StatementBlock ElseBlock { $$ = new IfElseStatement($3, $5, $6); YY_RESULT_Statement_= $$; }
-  | _SYMB_29 _SYMB_4 _IDENT_ _SYMB_28 Exp _SYMB_5 StatementBlock { $$ = new SomeStatement($3, $5, $7); YY_RESULT_Statement_= $$; }
-  | _SYMB_29 _SYMB_4 _IDENT_ _SYMB_28 Exp _SYMB_5 StatementBlock ElseBlock { $$ = new SomeElseStatement($3, $5, $7, $8); YY_RESULT_Statement_= $$; }
-  | LExpr _SYMB_3 Exp _SYMB_31 Exp { $$ = new ConditionalStatement($1, $3, $5); YY_RESULT_Statement_= $$; }
-  | LExpr _SYMB_3 Exp { $$ = new AbsoluteStatement($1, $3); YY_RESULT_Statement_= $$; }
-  | Exp { $$ = new ExpAsStatement($1); YY_RESULT_Statement_= $$; }
+Statement : Decl {  $$ = new DeclStat($1); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; } 
+  | _SYMB_25 _SYMB_4 _IDENT_ _SYMB_27 Exp _SYMB_5 StatementBlock {  $$ = new ForStatement($3, $5, $7); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
+  | _SYMB_26 _SYMB_4 Exp _SYMB_5 StatementBlock {  $$ = new IfStatement($3, $5); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
+  | _SYMB_26 _SYMB_4 Exp _SYMB_5 StatementBlock ElseBlock {  $$ = new IfElseStatement($3, $5, $6); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
+  | _SYMB_28 _SYMB_4 _IDENT_ _SYMB_27 Exp _SYMB_5 StatementBlock {  $$ = new SomeStatement($3, $5, $7); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
+  | _SYMB_28 _SYMB_4 _IDENT_ _SYMB_27 Exp _SYMB_5 StatementBlock ElseBlock {  $$ = new SomeElseStatement($3, $5, $7, $8); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
+  | Exp _SYMB_30 Exp {  $$ = new ConditionalStatement($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
+  | Exp {  $$ = new ExpAsStatement($1); $$->line_number = yy_mylinenumber; YY_RESULT_Statement_= $$; }
 ;
-Decl : _SYMB_30 _IDENT_ _SYMB_3 Exp { $$ = new SimpleDecl($2, $4); YY_RESULT_Decl_= $$; } 
-  | _SYMB_30 Type _IDENT_ _SYMB_3 Exp { $$ = new TypedDecl($2, $3, $5); YY_RESULT_Decl_= $$; }
-  | _SYMB_30 _IDENT_ _SYMB_3 Exp _SYMB_31 Exp { $$ = new SimpleDeclWith($2, $4, $6); YY_RESULT_Decl_= $$; }
-  | _SYMB_30 Type _IDENT_ _SYMB_3 Exp _SYMB_31 Exp { $$ = new TypedDeclWith($2, $3, $5, $7); YY_RESULT_Decl_= $$; }
-  | _SYMB_30 Type _IDENT_ { $$ = new BareDecl($2, $3); YY_RESULT_Decl_= $$; }
-  | _SYMB_23 _IDENT_ _SYMB_4 ListArgument _SYMB_5 StatementBlock { $$ = new EFuncDecl($2, $4, $6); YY_RESULT_Decl_= $$; }
-  | _SYMB_23 Type _IDENT_ _SYMB_4 ListArgument _SYMB_5 StatementBlock { $$ = new EFuncDeclWithType($2, $3, $5, $7); YY_RESULT_Decl_= $$; }
+Decl : _SYMB_29 _IDENT_ _SYMB_3 Exp {  $$ = new SimpleDecl($2, $4); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; } 
+  | _SYMB_29 Type _IDENT_ _SYMB_3 Exp {  $$ = new TypedDecl($2, $3, $5); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; }
+  | _SYMB_29 _IDENT_ _SYMB_3 Exp _SYMB_30 Exp {  $$ = new SimpleDeclWith($2, $4, $6); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; }
+  | _SYMB_29 Type _IDENT_ _SYMB_3 Exp _SYMB_30 Exp {  $$ = new TypedDeclWith($2, $3, $5, $7); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; }
+  | _SYMB_29 Type _IDENT_ {  $$ = new BareDecl($2, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; }
+  | _SYMB_22 _IDENT_ _SYMB_4 ListArgument _SYMB_5 StatementBlock {  std::reverse($4->begin(),$4->end()) ;$$ = new EFuncDecl($2, $4, $6); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; }
+  | _SYMB_22 Type _IDENT_ _SYMB_4 ListArgument _SYMB_5 StatementBlock {  std::reverse($5->begin(),$5->end()) ;$$ = new EFuncDeclWithType($2, $3, $5, $7); $$->line_number = yy_mylinenumber; YY_RESULT_Decl_= $$; }
 ;
-ElseBlock : _SYMB_24 _SYMB_27 _SYMB_4 Exp _SYMB_5 StatementBlock { $$ = new ElseIfBlock($4, $6); YY_RESULT_ElseBlock_= $$; } 
-  | _SYMB_24 _SYMB_27 _SYMB_4 Exp _SYMB_5 StatementBlock ElseBlock { $$ = new ElseIf2Block($4, $6, $7); YY_RESULT_ElseBlock_= $$; }
-  | _SYMB_24 StatementBlock { $$ = new ElseBlockStat($2); YY_RESULT_ElseBlock_= $$; }
-  | _SYMB_24 _SYMB_25 { $$ = new ElseFailStat(); YY_RESULT_ElseBlock_= $$; }
+ElseBlock : _SYMB_23 _SYMB_26 _SYMB_4 Exp _SYMB_5 StatementBlock {  $$ = new ElseIfBlock($4, $6); $$->line_number = yy_mylinenumber; YY_RESULT_ElseBlock_= $$; } 
+  | _SYMB_23 _SYMB_26 _SYMB_4 Exp _SYMB_5 StatementBlock ElseBlock {  $$ = new ElseIf2Block($4, $6, $7); $$->line_number = yy_mylinenumber; YY_RESULT_ElseBlock_= $$; }
+  | _SYMB_23 StatementBlock {  $$ = new ElseBlockStat($2); $$->line_number = yy_mylinenumber; YY_RESULT_ElseBlock_= $$; }
+  | _SYMB_23 _SYMB_24 {  $$ = new ElseFailStat(); $$->line_number = yy_mylinenumber; YY_RESULT_ElseBlock_= $$; }
 ;
-Exp : Exp _SYMB_6 Exp1 { $$ = new EOr($1, $3); YY_RESULT_Exp_= $$; } 
-  | Exp1 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp : Exp _SYMB_6 Exp1 {  $$ = new EOr($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp1 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp1 : Exp1 _SYMB_7 Exp2 { $$ = new EAnd($1, $3); YY_RESULT_Exp_= $$; } 
-  | Exp2 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp1 : Exp1 _SYMB_7 Exp2 {  $$ = new EAnd($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp2 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp2 : Exp2 _SYMB_8 Exp3 { $$ = new EEquals($1, $3); YY_RESULT_Exp_= $$; } 
-  | Exp2 _SYMB_9 Exp3 { $$ = new ENEq($1, $3); YY_RESULT_Exp_= $$; }
-  | Exp3 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp2 : Exp2 _SYMB_3 Exp3 {  $$ = new EEquals($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp2 _SYMB_8 Exp3 {  $$ = new ENEq($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | Exp3 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp3 : Exp3 _SYMB_10 Exp4 { $$ = new ELeq($1, $3); YY_RESULT_Exp_= $$; } 
-  | Exp3 _SYMB_11 Exp4 { $$ = new EGeq($1, $3); YY_RESULT_Exp_= $$; }
-  | Exp3 _SYMB_12 Exp4 { $$ = new ELessThan($1, $3); YY_RESULT_Exp_= $$; }
-  | Exp3 _SYMB_13 Exp4 { $$ = new EGreaterThan($1, $3); YY_RESULT_Exp_= $$; }
-  | Exp4 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp3 : Exp3 _SYMB_9 Exp4 {  $$ = new ELeq($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp3 _SYMB_10 Exp4 {  $$ = new EGeq($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | Exp3 _SYMB_11 Exp4 {  $$ = new ELessThan($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | Exp3 _SYMB_12 Exp4 {  $$ = new EGreaterThan($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | Exp4 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp4 : Exp4 _SYMB_14 Exp5 { $$ = new EAdd($1, $3); YY_RESULT_Exp_= $$; } 
-  | Exp4 _SYMB_15 Exp5 { $$ = new ESub($1, $3); YY_RESULT_Exp_= $$; }
-  | Exp5 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp4 : Exp4 _SYMB_13 Exp5 {  $$ = new EAdd($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp4 _SYMB_14 Exp5 {  $$ = new ESub($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | Exp5 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp5 : Exp5 _SYMB_16 Exp6 { $$ = new EMul($1, $3); YY_RESULT_Exp_= $$; } 
-  | Exp5 _SYMB_17 Exp6 { $$ = new EDiv($1, $3); YY_RESULT_Exp_= $$; }
-  | Exp6 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp5 : Exp5 _SYMB_15 Exp6 {  $$ = new EMul($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp5 _SYMB_16 Exp6 {  $$ = new EDiv($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | Exp6 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp6 : _SYMB_18 Exp7 { $$ = new ENot($2); YY_RESULT_Exp_= $$; } 
-  | Exp7 { $$ = $1; YY_RESULT_Exp_= $$; }
+Exp6 : _SYMB_17 Exp7 {  $$ = new ENot($2); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | Exp7 {  $$ = $1; YY_RESULT_Exp_= $$; }
 ;
-Exp7 : _IDENT_ { $$ = new EIdent($1); YY_RESULT_Exp_= $$; } 
-  | _IDENT_ _SYMB_4 ListExp _SYMB_5 { $$ = new EFuncCall($1, $3); YY_RESULT_Exp_= $$; }
-  | _INTEGER_ { $$ = new EInt($1); YY_RESULT_Exp_= $$; }
-  | _DOUBLE_ { $$ = new EFloat($1); YY_RESULT_Exp_= $$; }
-  | _STRING_ { $$ = new EString($1); YY_RESULT_Exp_= $$; }
-  | _SYMB_4 Exp _SYMB_5 { $$ = $2; YY_RESULT_Exp_= $$; }
+Exp7 : _IDENT_ {  $$ = new EIdent($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
+  | _IDENT_ _SYMB_18 ListExp _SYMB_19 {  std::reverse($3->begin(),$3->end()) ;$$ = new EVector($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _IDENT_ _SYMB_4 ListExp _SYMB_5 {  std::reverse($3->begin(),$3->end()) ;$$ = new EFuncCall($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _INTEGER_ {  $$ = new EInt($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _DOUBLE_ {  $$ = new EFloat($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _STRING_ {  $$ = new EString($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _SYMB_4 Exp _SYMB_5 {  $$ = $2; YY_RESULT_Exp_= $$; }
 ;
-Argument : Type _IDENT_ { $$ = new ArgumentDef($1, $2); YY_RESULT_Argument_= $$; } 
+Argument : Type _IDENT_ {  $$ = new ArgumentDef($1, $2); $$->line_number = yy_mylinenumber; YY_RESULT_Argument_= $$; } 
 ;
-ListArgument : /* empty */ { $$ = 0; YY_RESULT_ListArgument_= $$; } 
-  | Argument { $$ = new ListArgument($1); YY_RESULT_ListArgument_= $$; }
-  | Argument _SYMB_19 ListArgument { $$ = new ListArgument($1, $3); YY_RESULT_ListArgument_= $$; }
+ListArgument : /* empty */ {  $$ = new ListArgument(); YY_RESULT_ListArgument_= $$; } 
+  | Argument {  $$ = new ListArgument() ; $$->push_back($1); YY_RESULT_ListArgument_= $$; }
+  | Argument _SYMB_20 ListArgument {  $3->push_back($1) ; $$ = $3 ; YY_RESULT_ListArgument_= $$; }
 ;
-ListExp : /* empty */ { $$ = 0; YY_RESULT_ListExp_= $$; } 
-  | Exp { $$ = new ListExp($1); YY_RESULT_ListExp_= $$; }
-  | Exp _SYMB_19 ListExp { $$ = new ListExp($1, $3); YY_RESULT_ListExp_= $$; }
+ListExp : /* empty */ {  $$ = new ListExp(); YY_RESULT_ListExp_= $$; } 
+  | Exp {  $$ = new ListExp() ; $$->push_back($1); YY_RESULT_ListExp_= $$; }
+  | Exp _SYMB_20 ListExp {  $3->push_back($1) ; $$ = $3 ; YY_RESULT_ListExp_= $$; }
 ;
-Type : _IDENT_ { $$ = new EType($1); YY_RESULT_Type_= $$; } 
-  | Type _SYMB_20 Type _SYMB_21 { $$ = new VectorType($1, $3); YY_RESULT_Type_= $$; }
-  | _INTEGER_ _SYMB_22 _INTEGER_ { $$ = new RangeType($1, $3); YY_RESULT_Type_= $$; }
-  | _SYMB_0 ListSetTypeElem _SYMB_1 { $$ = new SetType($2); YY_RESULT_Type_= $$; }
+Type : _IDENT_ {  $$ = new EType($1); $$->line_number = yy_mylinenumber; YY_RESULT_Type_= $$; } 
+  | Type _SYMB_18 Type _SYMB_19 {  $$ = new VectorType($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Type_= $$; }
+  | _INTEGER_ _SYMB_21 _INTEGER_ {  $$ = new RangeType($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Type_= $$; }
+  | _SYMB_0 ListSetTypeElem _SYMB_1 {  std::reverse($2->begin(),$2->end()) ;$$ = new SetType($2); $$->line_number = yy_mylinenumber; YY_RESULT_Type_= $$; }
 ;
-SetTypeElem : _INTEGER_ { $$ = new EIntSTE($1); YY_RESULT_SetTypeElem_= $$; } 
-  | _DOUBLE_ { $$ = new EFloatSTE($1); YY_RESULT_SetTypeElem_= $$; }
-  | _STRING_ { $$ = new EStringSTE($1); YY_RESULT_SetTypeElem_= $$; }
+SetTypeElem : _INTEGER_ {  $$ = new EIntSTE($1); $$->line_number = yy_mylinenumber; YY_RESULT_SetTypeElem_= $$; } 
+  | _DOUBLE_ {  $$ = new EFloatSTE($1); $$->line_number = yy_mylinenumber; YY_RESULT_SetTypeElem_= $$; }
+  | _STRING_ {  $$ = new EStringSTE($1); $$->line_number = yy_mylinenumber; YY_RESULT_SetTypeElem_= $$; }
 ;
-ListSetTypeElem : /* empty */ { $$ = 0; YY_RESULT_ListSetTypeElem_= $$; } 
-  | SetTypeElem { $$ = new ListSetTypeElem($1); YY_RESULT_ListSetTypeElem_= $$; }
-  | SetTypeElem _SYMB_19 ListSetTypeElem { $$ = new ListSetTypeElem($1, $3); YY_RESULT_ListSetTypeElem_= $$; }
-;
-LExpr : _IDENT_ { $$ = new VarAsLExpr($1); YY_RESULT_LExpr_= $$; } 
-  | LExpr _SYMB_20 ListExp _SYMB_21 { $$ = new VectorAsLExpr($1, $3); YY_RESULT_LExpr_= $$; }
+ListSetTypeElem : /* empty */ {  $$ = new ListSetTypeElem(); YY_RESULT_ListSetTypeElem_= $$; } 
+  | SetTypeElem {  $$ = new ListSetTypeElem() ; $$->push_back($1); YY_RESULT_ListSetTypeElem_= $$; }
+  | SetTypeElem _SYMB_20 ListSetTypeElem {  $3->push_back($1) ; $$ = $3 ; YY_RESULT_ListSetTypeElem_= $$; }
 ;
 

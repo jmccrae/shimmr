@@ -44,7 +44,7 @@ TEST(TestUnion) {
 
 TEST(TestError) {
 	auto sys = make_shared<TypeSystem>();
-	auto err = sys->makeError("Something went wrong!");
+	auto err = sys->makeError(0,"Something went wrong!");
 	CHECK(err->isError());
 	CHECK(!err->isEqual(sys->Numeric));
 	CHECK(err->or(sys->String)->isError());

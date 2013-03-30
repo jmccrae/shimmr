@@ -6,76 +6,75 @@
 
 class Skeleton : public Visitor
 {
- public:
+public:
+  void visitProgram(Program* p);
+  void visitStatementBlock(StatementBlock* p);
+  void visitStatement(Statement* p);
+  void visitDecl(Decl* p);
+  void visitElseBlock(ElseBlock* p);
+  void visitExp(Exp* p);
+  void visitArgument(Argument* p);
+  void visitType(Type* p);
+  void visitSetTypeElem(SetTypeElem* p);
+  void visitStatements(Statements* p);
+  void visitStatementBlockStat(StatementBlockStat* p);
+  void visitDeclStat(DeclStat* p);
+  void visitSimpleDecl(SimpleDecl* p);
+  void visitTypedDecl(TypedDecl* p);
+  void visitSimpleDeclWith(SimpleDeclWith* p);
+  void visitTypedDeclWith(TypedDeclWith* p);
+  void visitBareDecl(BareDecl* p);
+  void visitEFuncDecl(EFuncDecl* p);
+  void visitEFuncDeclWithType(EFuncDeclWithType* p);
+  void visitForStatement(ForStatement* p);
+  void visitIfStatement(IfStatement* p);
+  void visitIfElseStatement(IfElseStatement* p);
+  void visitElseIfBlock(ElseIfBlock* p);
+  void visitElseIf2Block(ElseIf2Block* p);
+  void visitElseBlockStat(ElseBlockStat* p);
+  void visitElseFailStat(ElseFailStat* p);
+  void visitSomeStatement(SomeStatement* p);
+  void visitSomeElseStatement(SomeElseStatement* p);
+  void visitConditionalStatement(ConditionalStatement* p);
+  void visitExpAsStatement(ExpAsStatement* p);
+  void visitEOr(EOr* p);
+  void visitEAnd(EAnd* p);
+  void visitEEquals(EEquals* p);
+  void visitENEq(ENEq* p);
+  void visitELeq(ELeq* p);
+  void visitEGeq(EGeq* p);
+  void visitELessThan(ELessThan* p);
+  void visitEGreaterThan(EGreaterThan* p);
+  void visitEAdd(EAdd* p);
+  void visitESub(ESub* p);
+  void visitEMul(EMul* p);
+  void visitEDiv(EDiv* p);
+  void visitENot(ENot* p);
+  void visitEIdent(EIdent* p);
+  void visitEVector(EVector* p);
+  void visitEFuncCall(EFuncCall* p);
+  void visitArgumentDef(ArgumentDef* p);
+  void visitEInt(EInt* p);
+  void visitEFloat(EFloat* p);
+  void visitEString(EString* p);
+  void visitEType(EType* p);
+  void visitVectorType(VectorType* p);
+  void visitRangeType(RangeType* p);
+  void visitSetType(SetType* p);
+  void visitEIntSTE(EIntSTE* p);
+  void visitEFloatSTE(EFloatSTE* p);
+  void visitEStringSTE(EStringSTE* p);
+  void visitListStatement(ListStatement* p);
+  void visitListArgument(ListArgument* p);
+  void visitListExp(ListExp* p);
+  void visitListSetTypeElem(ListSetTypeElem* p);
 
-  void visitProgram(Program* program); /* abstract class */
-  void visitStatements(Statements* statements);
-  void visitStatementBlock(StatementBlock* statementblock); /* abstract class */
-  void visitStatementBlockStat(StatementBlockStat* statementblockstat);
-  void visitListStatement(ListStatement* liststatement);  void visitStatement(Statement* statement); /* abstract class */
-  void visitDeclStat(DeclStat* declstat);
-  void visitForStatement(ForStatement* forstatement);
-  void visitIfStatement(IfStatement* ifstatement);
-  void visitIfElseStatement(IfElseStatement* ifelsestatement);
-  void visitSomeStatement(SomeStatement* somestatement);
-  void visitSomeElseStatement(SomeElseStatement* someelsestatement);
-  void visitConditionalStatement(ConditionalStatement* conditionalstatement);
-  void visitAbsoluteStatement(AbsoluteStatement* absolutestatement);
-  void visitExpAsStatement(ExpAsStatement* expasstatement);
-  void visitDecl(Decl* decl); /* abstract class */
-  void visitSimpleDecl(SimpleDecl* simpledecl);
-  void visitTypedDecl(TypedDecl* typeddecl);
-  void visitSimpleDeclWith(SimpleDeclWith* simpledeclwith);
-  void visitTypedDeclWith(TypedDeclWith* typeddeclwith);
-  void visitBareDecl(BareDecl* baredecl);
-  void visitEFuncDecl(EFuncDecl* efuncdecl);
-  void visitEFuncDeclWithType(EFuncDeclWithType* efuncdeclwithtype);
-  void visitElseBlock(ElseBlock* elseblock); /* abstract class */
-  void visitElseIfBlock(ElseIfBlock* elseifblock);
-  void visitElseIf2Block(ElseIf2Block* elseif2block);
-  void visitElseBlockStat(ElseBlockStat* elseblockstat);
-  void visitElseFailStat(ElseFailStat* elsefailstat);
-  void visitExp(Exp* exp); /* abstract class */
-  void visitEOr(EOr* eor);
-  void visitEAnd(EAnd* eand);
-  void visitEEquals(EEquals* eequals);
-  void visitENEq(ENEq* eneq);
-  void visitELeq(ELeq* eleq);
-  void visitEGeq(EGeq* egeq);
-  void visitELessThan(ELessThan* elessthan);
-  void visitEGreaterThan(EGreaterThan* egreaterthan);
-  void visitEAdd(EAdd* eadd);
-  void visitESub(ESub* esub);
-  void visitEMul(EMul* emul);
-  void visitEDiv(EDiv* ediv);
-  void visitENot(ENot* enot);
-  void visitEIdent(EIdent* eident);
-  void visitEFuncCall(EFuncCall* efunccall);
-  void visitEInt(EInt* eint);
-  void visitEFloat(EFloat* efloat);
-  void visitEString(EString* estring);
-  void visitArgument(Argument* argument); /* abstract class */
-  void visitArgumentDef(ArgumentDef* argumentdef);
-  void visitListArgument(ListArgument* listargument);  void visitListExp(ListExp* listexp);  void visitType(Type* type); /* abstract class */
-  void visitEType(EType* etype);
-  void visitVectorType(VectorType* vectortype);
-  void visitRangeType(RangeType* rangetype);
-  void visitSetType(SetType* settype);
-  void visitSetTypeElem(SetTypeElem* settypeelem); /* abstract class */
-  void visitEIntSTE(EIntSTE* eintste);
-  void visitEFloatSTE(EFloatSTE* efloatste);
-  void visitEStringSTE(EStringSTE* estringste);
-  void visitListSetTypeElem(ListSetTypeElem* listsettypeelem);  void visitLExpr(LExpr* lexpr); /* abstract class */
-  void visitVarAsLExpr(VarAsLExpr* varaslexpr);
-  void visitVectorAsLExpr(VectorAsLExpr* vectoraslexpr);
+  void visitInteger(Integer x);
+  void visitChar(Char x);
+  void visitDouble(Double x);
+  void visitString(String x);
+  void visitIdent(Ident x);
 
-
-  void visitIdent(String s);
-  void visitInteger(Integer i);
-  void visitDouble(Double d);
-  void visitChar(Char c);
-  void visitString(String s);
 };
 
 #endif
-

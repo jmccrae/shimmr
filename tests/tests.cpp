@@ -86,7 +86,7 @@ TEST(IfStatement) {
 
 
 TEST(IfElseStatement) {
-	auto result = getAST("if(x == 3) { val x = 3; } else if(x == 4) { val y = 3; } else { val z = 5; }");
+	auto result = getAST("if(x = 3) { val x = 3; } else if(x = 4) { val y = 3; } else { val z = 5; }");
 	CHECK(result);
 }
 
@@ -99,7 +99,7 @@ TEST(ComparisonStatement) {
 	CHECK(result);
 	result = getAST("val x = 2.0 >= 3.0;");
 	CHECK(result);
-	result = getAST("val x = true == false;");
+	result = getAST("val x = (true = false);");
 	CHECK(result);
 	result = getAST("val x = true != false;");
 	CHECK(result);

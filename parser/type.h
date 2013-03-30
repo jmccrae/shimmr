@@ -27,9 +27,12 @@ namespace shimmrType {
 		virtual bool isCollection() const;
 		virtual bool isSet() const;
 		virtual bool isRange() const;
+		virtual bool isFunction() const;
 		virtual std::shared_ptr<std::set<std::string>> asUnion() const;
 		virtual bool canMerge(const std::shared_ptr<Type>) const;
 		virtual std::shared_ptr<Type> merge(const std::shared_ptr<Type>) const;
+		virtual std::shared_ptr<Type> contentType() const;
+		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	bool operator<(const Type&, const Type&);
@@ -108,6 +111,8 @@ namespace shimmrType {
 		~VectorType();
 		virtual const std::string& symbol() const;
 		virtual bool isCollection() const;
+		virtual std::shared_ptr<Type> contentType() const;
+		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	class ErrorType : public Type {
@@ -126,6 +131,8 @@ namespace shimmrType {
 		virtual bool isSuperclassOf(const std::shared_ptr<Type>) const;
 		virtual bool isEqual(const std::shared_ptr<Type>) const;
 		virtual bool isError() const;
+		virtual std::shared_ptr<Type> contentType() const;
+		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	enum TypeValueType { tvtString, tvtInt, tvtFloat };
@@ -193,6 +200,9 @@ namespace shimmrType {
 		virtual bool isSet() const;
 		virtual bool canMerge(const std::shared_ptr<Type>) const;
 		virtual std::shared_ptr<Type> merge(const std::shared_ptr<Type>) const;
+		virtual bool isCollection() const;
+		virtual std::shared_ptr<Type> contentType() const;
+		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	class RangeType : public Type {
@@ -209,6 +219,9 @@ namespace shimmrType {
 		virtual bool isRange() const;
 		virtual bool canMerge(const std::shared_ptr<Type>) const;
 		virtual std::shared_ptr<Type> merge(const std::shared_ptr<Type>) const;
+		virtual bool isCollection() const;
+		virtual std::shared_ptr<Type> contentType() const;
+		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	class FunctionType : public Type {
@@ -219,7 +232,10 @@ namespace shimmrType {
 		std::vector<std::shared_ptr<Type>> _argTypes;
 		FunctionType(TypeSystem*,const std::shared_ptr<Type>,const std::vector<std::shared_ptr<Type>>&);
 	public:
+		virtual bool isFunction() const;
 		virtual const std::string& symbol() const;
+		virtual const std::shared_ptr<Type> returnType() const;
+		virtual const std::vector<std::shared_ptr<Type>>& argTypes() const ;
 	};
 
 	class TypeSystem {
@@ -239,7 +255,7 @@ namespace shimmrType {
 		const std::shared_ptr<Type> Unit;
 		const std::shared_ptr<Type> Anything;
 		const std::shared_ptr<Type> makeUnion(const std::shared_ptr<std::set<std::string>>, const std::shared_ptr<std::set<std::string>>);
-		const std::shared_ptr<Type> makeError(const std::string&);
+		const std::shared_ptr<Type> makeError(const int, const std::string&);
 		const std::shared_ptr<Type> makeSet(const std::set<const std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
 		const std::shared_ptr<Type> makeRange(const int,const int);
 		const std::shared_ptr<Type> makeVector(const std::shared_ptr<Type>, const std::shared_ptr<Type>);

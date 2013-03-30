@@ -1,6 +1,7 @@
 #include "type_checker.h"
 
 #include <sstream>
+#include <assert.h>
 
 using namespace std;
 
@@ -21,43 +22,85 @@ namespace shimmr {
 		return t;
 	}
 
-	void TypeChecker::visitStatements(Statements *p) {
-		ListStatement *ls = p->liststatement_;
-		auto type = sys->Unit;
-		while(ls != nullptr) {
-			ls->statement_->accept(this);
-			ls = ls->liststatement_;
-			if(type->isError()) {
-				type = type->or(typeStack.top());
-			} else {
-				type = typeStack.top();
-			}
+	shared_ptr<shimmrType::Type> TypeChecker::visitForType(Visitable *p) {
+		p->accept(this);
+		auto type = typeStack.top();
+		typeStack.pop();
+		return type;
+	}
+		
+	std::vector<std::shared_ptr<shimmrType::Type>> TypeChecker::visitForTypeList(Visitable *p) {
+		int i = typeStack.size();
+		p->accept(this);
+		const int end = typeStack.size();
+		vector<shared_ptr<shimmrType::Type>> typeList;
+		for(; i < end; i++) {
+			typeList.push_back(typeStack.top());
 			typeStack.pop();
 		}
-		typeStack.push(type);
+		reverse(typeList.begin(),typeList.end());
+		return typeList;
+	}
+	
+	void TypeChecker::checkSOE(const int lineNo, shared_ptr<shimmrType::Type> t1, shared_ptr<shimmrType::Type> t2, std::string msg) {
+		if(!t1->isError() && !t2->isError() && !t1->isSuperclassOrEqual(t2)) {
+			string m(msg);
+			auto err = sys->makeError(lineNo,m);
+			follow(err);
+		}
+	}
+
+	void TypeChecker::checkCollection(const int lineNo, shared_ptr<shimmrType::Type> t) {
+		if(!t->isError() && !t->isCollection()) {
+			string msg("Iteration over non-collection type");
+			msg.append(t->symbol());
+			auto err = sys->makeError(lineNo,msg);
+			follow(err);
+		}
+	}
+
+	void TypeChecker::checkFunction(const int lineNo, shared_ptr<shimmrType::Type> t) {
+		if(!t->isError() && !t->isFunction()) {
+			string msg("Invocation of non-function type");
+			msg.append(t->symbol());
+			auto err = sys->makeError(lineNo,msg);
+			follow(err);
+		}
+	}
+
+	void TypeChecker::follow(shared_ptr<shimmrType::Type> t) {
+		if(typeStack.top()->isError()) {
+			if(t->isError()) {
+				auto newErr = typeStack.top()->or(t);
+				typeStack.pop();
+				typeStack.push(newErr);
+			} else {
+				// no-op
+			}
+		} else {
+			typeStack.pop();
+			typeStack.push(t);
+		}
+	}
+
+	void TypeChecker::visitStatements(Statements *p) {
+		p->liststatement_->accept(this);
 	}
 
 	void TypeChecker::visitStatementBlockStat(StatementBlockStat *p) {
 		auto childScope = current->children[p];
-		auto type = sys->Unit;
 		current = childScope.get();
-		ListStatement *ls = p->liststatement_;
-		while(ls != nullptr) {
-			ls->statement_->accept(this);
-			ls = ls->liststatement_;
-			if(type->isError()) {
-				type = type->or(typeStack.top());
-			} else {
-				type = typeStack.top();
-			}
-			typeStack.pop();
-		}
-		typeStack.push(type);
-		current = childScope->parent;
+
+		p->liststatement_->accept(this);
+
+		current = current->parent;
 	}
 
 	void TypeChecker::visitListStatement(ListStatement *p) {
-		// Skipped
+		typeStack.push(sys->Unit);
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			follow(visitForType(*it));
+		}
 	}
 
 	void TypeChecker::visitDeclStat(DeclStat *p) {
@@ -65,85 +108,67 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitSimpleDecl(SimpleDecl *p) {
-
-		p->exp_->accept(this);
-		auto type = typeStack.top();
-		typeStack.pop();
+		auto type = visitForType(p->exp_);
 		
 		string varName(p->ident_);
 		auto elem = current->resolve(varName);
 		elem->updateType(type);
 		
-		typeStack.push(sys->Unit);
+		typeStack.push(type);
+		follow(sys->Unit);
 	}
 
 	void TypeChecker::visitTypedDecl(TypedDecl *p) {
-		p->exp_->accept(this);
-		auto type = typeStack.top();
-		typeStack.pop();
+		auto type = visitForType(p->exp_);
 
 		string varName(p->ident_);
 		auto elem = current->resolve(varName);
-		if(elem->type()->isSuperclassOrEqual(type)) {
-			// valid assignment
-			typeStack.push(sys->Unit);
-		} else {
-			ostringstream msg;
-			msg << "Variable " << varName << " declared as " << elem->type()->symbol() << " but assigned in initialization as " << type->symbol();
-			auto err = sys->makeError(msg.str());
-			typeStack.push(err);
-		}
+		
+		typeStack.push(type);
+
+		checkSOE(p->line_number,elem->type(),type,
+			"Variable declared as " + elem->type()->symbol() + " but assigned in initialization as " + type->symbol());
+
+		follow(sys->Unit);
 	}
 
 	void TypeChecker::visitSimpleDeclWith(SimpleDeclWith *p) {
-		p->exp_1->accept(this);
-		auto type1 = typeStack.top();
-		typeStack.pop();
+		
+		auto type1 = visitForType(p->exp_1);
 
-		p->exp_2->accept(this);
-		auto type2 = typeStack.top();
-		typeStack.pop();
+		typeStack.push(type1);
+
+		auto type2 = visitForType(p->exp_2);
+
+		follow(type2);
 
 		string varName(p->ident_);
 		auto elem = current->resolve(varName);
-		if(sys->Numeric->isSuperclassOrEqual(type2)) {
-			elem->updateType(type1);
-			typeStack.push(sys->Unit);
-		} else {
-			ostringstream msg;
-			msg << "Variable " << varName << " declaration has non-numeric  with clause";
-			auto err = sys->makeError(msg.str());
-			typeStack.push(err);
-		}
+		elem->updateType(type1);
+
+		checkSOE(p->line_number,sys->Numeric,type2,"With clause has non-numeric value");
+
+		follow(sys->Unit);
 	}
 
 	void TypeChecker::visitTypedDeclWith(TypedDeclWith *p) {
-		p->exp_1->accept(this);
-		auto type1 = typeStack.top();
-		typeStack.pop();
+		auto type1 = visitForType(p->exp_1);
 
-		p->exp_2->accept(this);
-		auto type2 = typeStack.top();
-		typeStack.pop();
-
+		typeStack.push(type1);
+				
 		string varName(p->ident_);
 		auto elem = current->resolve(varName);
-		if(sys->Numeric->isSuperclassOrEqual(type2)) {
-			if(elem->type()->isSuperclassOrEqual(type1)) {
-				// Valid
-				typeStack.push(sys->Unit);
-			} else {
-				ostringstream msg;
-				msg << "Variable " << varName << " declared as " << elem->type()->symbol() << " but assigned in initialization as " << type1->symbol();
-				auto err = sys->makeError(msg.str());
-				typeStack.push(err);
-			}
-		} else {
-			ostringstream msg;
-			msg << "Variable " << varName << " declaration has non-numeric  with clause";
-			auto err = sys->makeError(msg.str());
-			typeStack.push(err);
-		}
+
+		checkSOE(p->line_number,elem->type(),type1,
+			"Variable declared as " + elem->type()->symbol() + " but assigned in initialization as " + type1->symbol());
+
+		auto type2 = visitForType(p->exp_2);
+
+		follow(type2);
+
+		checkSOE(p->line_number,sys->Numeric,type2,"With clause has non-numeric value");
+
+		follow(sys->Unit);
 	}
 
 	void TypeChecker::visitBareDecl(BareDecl *p) {
@@ -151,280 +176,700 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitEFuncDecl(EFuncDecl *p) {
-		/*string varName(p->ident_);
-		shared_ptr<DeclarationPoint> dp(new DeclDP(p));
-		auto elem = make_shared<ScopeElement>(current,nullptr,dp);
-		current->assign(elem,varName);
-
+		// Change scope
 		auto s = current->children[p];
 		current = s.get();
-		p->listargument_->accept(this);
-		p->statementblock_->accept(this);
-		current = current->parent;*/
+
+		auto argList = visitForTypeList(p->listargument_);
+
+		auto retType = visitForType(p->statementblock_);
+
+		auto funcType = sys->makeFunction(retType,argList);
+
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+		elem->updateType(funcType);
+
+		typeStack.push(funcType);
+		follow(sys->Unit);
+
+		current = current->parent;
 	}
 
 	void TypeChecker::visitEFuncDeclWithType(EFuncDeclWithType *p) {
-		/*string varName(p->ident_);
-		p->type_->accept(this);
-		auto retType = typeStack.top();
-		typeStack.pop();
-		int i = typeStack.size();
-		p->listargument_->accept(this);
-		vector<shared_ptr<shimmrType::Type>> argList;
-		int end = typeStack.size();
-		for(; i < end; i++) {
-			argList.push_back(typeStack.top());
-			typeStack.pop();
-		}
-		reverse(argList.begin(),argList.end());
-		auto type = current->typeSystem->makeFunction(retType,argList);
-		shared_ptr<DeclarationPoint> dp(new DeclDP(p));
-		auto elem = make_shared<ScopeElement>(current,type,dp);
-		current->assign(elem,varName);
-
 		auto s = current->children[p];
 		current = s.get();
-		p->listargument_->accept(this);
-		p->statementblock_->accept(this);
-		current = current->parent;*/
+
+		auto argList = visitForTypeList(p->listargument_);
+
+		auto retType = visitForType(p->statementblock_);
+
+		auto funcType = sys->makeFunction(retType,argList);
+
+		typeStack.push(funcType);
+		
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+
+		checkSOE(p->line_number,elem->type(),funcType,
+			"Function declared as " + elem->type()->symbol() + " but return type was " + retType->symbol());
+
+		follow(sys->Unit);
+
+		current = current->parent;
 	}
 
 	void TypeChecker::visitForStatement(ForStatement *p) {
-		/*p->exp_->accept(this);
+		auto expType = visitForType(p->exp_);
+
+		typeStack.push(expType);
+
+		checkCollection(p->line_number,expType);
+		
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
-		current = current->parent;*/
+		
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+		elem->updateType(expType->contentType());
+
+		auto resultType = visitForType(p->statementblock_);
+		follow(resultType);
+
+		follow(sys->makeVector(resultType,expType->indexType()));
+
+		current = current->parent;
 	}
 
 	void TypeChecker::visitIfStatement(IfStatement *p) {
-		p->exp_->accept(this);
+		auto expType = visitForType(p->exp_);
+		typeStack.push(expType);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			expType,
+			"Condition in if statement was not a Bool");
+
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
+
+		auto statType = visitForType(p->statementblock_);
+		follow(statType->or(sys->Null));
+
 		current = current->parent;
 	}
 
 	void TypeChecker::visitIfElseStatement(IfElseStatement *p) {
-		p->exp_->accept(this);
+		auto expType = visitForType(p->exp_);
+		typeStack.push(expType);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			expType,
+			"Condition in if statement was not a Bool");
+
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
+
+		auto statType = visitForType(p->statementblock_);
+		auto elseType = visitForType(p->elseblock_);
+		follow(statType->or(elseType));
+
 		current = current->parent;
-		p->elseblock_->accept(this);
 	}
 
 	void TypeChecker::visitElseIfBlock(ElseIfBlock *p) {
-		p->exp_->accept(this);
+		auto expType = visitForType(p->exp_);
+		typeStack.push(expType);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			expType,
+			"Condition in if statement was not a Bool");
+
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
-		current = current->parent;
 
+		auto statType = visitForType(p->statementblock_);
+		follow(statType->or(sys->Null));
+
+		current = current->parent;
 	}
 
 	void TypeChecker::visitElseIf2Block(ElseIf2Block *p) {
-		p->exp_->accept(this);
+		auto expType = visitForType(p->exp_);
+		typeStack.push(expType);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			expType,
+			"Condition in if statement was not a Bool");
+
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
+
+		auto statType = visitForType(p->statementblock_);
+		auto elseType = visitForType(p->elseblock_);
+		follow(statType->or(elseType));
+
 		current = current->parent;
-		p->elseblock_->accept(this);
 
 	}
 
 	void TypeChecker::visitElseBlockStat(ElseBlockStat *p) {
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
+
+		auto type = visitForType(p->statementblock_);
+		typeStack.push(type);
+		
 		current = current->parent;
 	}
 
 	void TypeChecker::visitElseFailStat(ElseFailStat *p) {
-
+		typeStack.push(sys->Null);
 	}
 
 	void TypeChecker::visitSomeStatement(SomeStatement *p) {
-		p->exp_->accept(this);
+		auto expType = visitForType(p);
+		typeStack.push(expType);
+
+		checkCollection(p->line_number,
+			expType);
+
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
+
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+		elem->updateType(expType->contentType());
+
+		auto statType = visitForType(p->statementblock_);
+		follow(statType);
+
+		follow(sys->makeVector(statType,expType->indexType())->or(sys->Null));
+
 		current = current->parent;
 	}
 
 	void TypeChecker::visitSomeElseStatement(SomeElseStatement *p) {
-		p->exp_->accept(this);
+		auto expType = visitForType(p);
+		typeStack.push(expType);
+
+		checkCollection(p->line_number,
+			expType);
+
 		auto s = current->children[p];
 		current = s.get();
-		p->statementblock_->accept(this);
+
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+		elem->updateType(expType->contentType());
+
+		auto statType = visitForType(p->statementblock_);
+		follow(statType);
+
+		auto elseType = visitForType(p->elseblock_);
+		follow(elseType);
+
+		follow(sys->makeVector(statType,expType->indexType())->or(elseType));
+
 		current = current->parent;
-		p->elseblock_->accept(this);
 
 	}
 
 	void TypeChecker::visitConditionalStatement(ConditionalStatement *p) {
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
-	}
 
-	void TypeChecker::visitAbsoluteStatement(AbsoluteStatement *p) {
-		p->exp_->accept(this);
+		auto type2 = visitForType(p->exp_2);
+		typeStack.push(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Conditional statement has non-numeric with clause");
+		
+		auto type1 = visitForType(p->exp_1);
+		follow(type1);
 	}
 
 	void TypeChecker::visitExpAsStatement(ExpAsStatement *p) {
-		p->exp_->accept(this);
+		auto type = visitForType(p->exp_);
+		typeStack.push(type);
 
 	}
 
 	void TypeChecker::visitEOr(EOr *p) {
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
 
+		checkSOE(p->line_number,
+			sys->Bool,
+			type1,
+			"Left-side of || not a Bool");
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			type2,
+			"Right-side of || not a Bool");
 	}
 
 	void TypeChecker::visitEAnd(EAnd *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			type1,
+			"Left-side of && not a Bool");
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			type2,
+			"Right-side of && not a Bool");
 	}
 
 	void TypeChecker::visitEEquals(EEquals *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			type1,
+			type2,
+			"Assignment does not conform to type bounds");
 	}
 
 	void TypeChecker::visitENEq(ENEq *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			type1,
+			type2,
+			"Assignment does not conform to type bounds");
 	}
 
 	void TypeChecker::visitELeq(ELeq *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Left side of <= not numeric");
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Right side of <= not numeric");
+
+		follow(sys->Bool);
 	}
 
 	void TypeChecker::visitEGeq(EGeq *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Left side of >= not numeric");
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Right side of >= not numeric");
+
+		follow(sys->Bool);
 	}
 
 	void TypeChecker::visitELessThan(ELessThan *p) {
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Left side of < not numeric");
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Right side of < not numeric");
+
+		follow(sys->Bool);
 
 	}
 
 	void TypeChecker::visitEGreaterThan(EGreaterThan *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
+		auto type1 = visitForType(p->exp_1);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Left side of > not numeric");
+
+		auto type2 = visitForType(p->exp_2);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Right side of > not numeric");
+
+		follow(sys->Bool);
 	}
 
-	void TypeChecker::visitEAdd(EAdd *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
-	}
+	shared_ptr<shimmrType::Type> inferNumericResult(shared_ptr<shimmrType::TypeSystem> sys,
+		shared_ptr<shimmrType::Type> t1,
+		shared_ptr<shimmrType::Type> t2,
+		function<int (int,int)> iTransform,
+		function<double (double,double)> dTransform) {
 
-	void TypeChecker::visitESub(ESub *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
-	}
-
-	void TypeChecker::visitEMul(EMul *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
-	}
-
-	void TypeChecker::visitEDiv(EDiv *p) {
-		
-		p->exp_1->accept(this);
-		p->exp_2->accept(this);
-	}
-
-	void TypeChecker::visitENot(ENot *p) {
-		
-		p->exp_->accept(this);
-	}
-
-	void TypeChecker::visitEIdent(EIdent *p) {
-
-	}
-
-	void TypeChecker::visitEFuncCall(EFuncCall *p) {
-		p->listexp_->accept(this);
-	}
-
-	void TypeChecker::visitArgumentDef(ArgumentDef *p) {
-		/*string varName(p->ident_);
-		p->type_->accept(this);
-		auto type = typeStack.top();
-		typeStack.pop();
-		shared_ptr<DeclarationPoint> dp(new ArgDP(p));
-		auto elem = make_shared<ScopeElement>(current,type,dp);
-		current->assign(elem,varName);*/
-	}
-
-	void TypeChecker::visitListArgument(ListArgument *p) {
-		p->argument_->accept(this);
-		if(p->listargument_ != nullptr) {
-			p->listargument_->accept(this);
+		if(t1->isEqual(sys->Numeric)) {
+			return t1;
+		} else if(t2->isEqual(sys->Numeric)) {
+			return t2;
+		} else if(t1->isEqual(sys->Float)) {
+			return t1;
+		} else if(t2->isEqual(sys->Float)) {
+			return t2;
+		} else if(t1->isEqual(sys->Int)) {
+			return t1;
+		} else if(t2->isEqual(sys->Int)) {
+			return t2;
+		} else if(t1->isRange()) {
+			if(t2->isRange()) {
+				auto _t1 = (shimmrType::RangeType*)t1.get();
+				auto _t2 = (shimmrType::RangeType*)t2.get();
+				int lb = min(min(iTransform(_t1->lb,_t2->lb),
+					iTransform(_t1->lb,_t2->ub)),
+					min(iTransform(_t1->ub,_t2->lb),
+					iTransform(_t1->ub,_t2->ub)));
+				int ub = max(max(iTransform(_t1->lb,_t2->lb),
+					iTransform(_t1->lb,_t2->ub)),
+					max(iTransform(_t1->ub,_t2->lb),
+					iTransform(_t1->ub,_t2->ub)));
+				return sys->makeRange(lb,ub);
+			} else if(t2->isSet()) {
+				auto _t1 = (shimmrType::RangeType*)t1.get();
+				auto _t2 = (shimmrType::SetType*)t2.get();
+				std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				for(auto it = _t2->values.begin(); it != _t2->values.end(); ++it) {
+					for(int i = _t1->lb; i <= _t1->ub; i++) {
+						if((*it)->type() == shimmrType::tvtFloat) {
+							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform(i,(*it)->floatValue()));
+							values.insert(v);
+						} else if((*it)->type() == shimmrType::tvtInt) {
+							auto v = make_shared<shimmrType::IntTypeValue>(iTransform(i,(*it)->intValue()));
+							values.insert(v);
+						} else {
+							return sys->makeError(-1, "[INTERNAL] String found in supposedly numeric set");
+						}
+					}
+				}
+				return sys->makeSet(values);
+			} else {
+				return sys->makeError(-1, "[INTERNAL] t1 range, t2 not a set or range");
+			}
+		} else if(t1->isSet()) {
+			if(t2->isRange()) {
+				auto _t1 = (shimmrType::SetType*)t1.get();
+				auto _t2 = (shimmrType::RangeType*)t2.get();
+				std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				for(auto it = _t1->values.begin(); it != _t1->values.end(); ++it) {
+					for(int i = _t2->lb; i <= _t2->ub; i++) {
+						if((*it)->type() == shimmrType::tvtFloat) {
+							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it)->floatValue(),i));
+							values.insert(v);
+						} else if((*it)->type() == shimmrType::tvtInt) {
+							auto v = make_shared<shimmrType::IntTypeValue>(iTransform((*it)->intValue(),i));
+							values.insert(v);
+						} else {
+							return sys->makeError(-1, "[INTERNAL] String found in supposedly numeric set");
+						}
+					}
+				}
+				return sys->makeSet(values);
+			} else if(t2->isSet()) {
+				
+				auto _t1 = (shimmrType::SetType*)t1.get();
+				auto _t2 = (shimmrType::SetType*)t2.get();
+				std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				for(auto it1 = _t1->values.begin(); it1 != _t1->values.end(); ++it1) {
+					for(auto it2 = _t2->values.begin(); it2 != _t2->values.end(); ++it2) {
+						if((*it1)->type() == shimmrType::tvtFloat && (*it2)->type() == shimmrType::tvtFloat) {
+							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->floatValue()));
+							values.insert(v);
+						} else if((*it1)->type() == shimmrType::tvtFloat && (*it2)->type() == shimmrType::tvtInt) {
+							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->intValue()));
+							values.insert(v);
+						} else if((*it1)->type() == shimmrType::tvtInt && (*it2)->type() == shimmrType::tvtFloat) {
+							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->intValue(),(*it2)->floatValue()));
+							values.insert(v);
+						} else if((*it1)->type() == shimmrType::tvtInt && (*it2)->type() == shimmrType::tvtInt) {
+							auto v = make_shared<shimmrType::FloatTypeValue>(iTransform((*it1)->intValue(),(*it2)->intValue()));
+							values.insert(v);
+						} else {
+							return sys->makeError(-1, "[INTERNAL] String found in supposedly numeric set");
+						}
+					}
+				}
+				return sys->makeSet(values);
+			} else {
+				return sys->makeError(-1, "[INTERNAL] t1 range, t2 not a set or range");
+			}
 		}
 	}
 
-	void TypeChecker::visitEInt(EInt *p) {
+	void TypeChecker::visitEAdd(EAdd *p) {
+		auto type1 = visitForType(p);
+		typeStack.push(type1);
 
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Non-numeric value on left side of +");
+
+		auto type2 = visitForType(p);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Non-numeric value on right side of +");
+
+		auto combinedType = inferNumericResult(sys,
+			type1,type2,
+			[](int x, int y) { return x + y; },
+			[](double x, double y) { return x + y; });
+
+		follow(combinedType);
+	}
+
+	void TypeChecker::visitESub(ESub *p) {
+		auto type1 = visitForType(p);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Non-numeric value on left side of -");
+
+		auto type2 = visitForType(p);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Non-numeric value on right side of -");
+
+		auto combinedType = inferNumericResult(sys,
+			type1,type2,
+			[](int x, int y) { return x - y; },
+			[](double x, double y) { return x - y; });
+
+		follow(combinedType);
+	}
+
+	void TypeChecker::visitEMul(EMul *p) {
+		auto type1 = visitForType(p);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Non-numeric value on left side of *");
+
+		auto type2 = visitForType(p);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Non-numeric value on right side of *");
+
+		auto combinedType = inferNumericResult(sys,
+			type1,type2,
+			[](int x, int y) { return x * y; },
+			[](double x, double y) { return x * y; });
+
+		follow(combinedType);
+	}
+
+	void TypeChecker::visitEDiv(EDiv *p) {
+		auto type1 = visitForType(p);
+		typeStack.push(type1);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type1,
+			"Non-numeric value on left side of /");
+
+		auto type2 = visitForType(p);
+		follow(type2);
+
+		checkSOE(p->line_number,
+			sys->Numeric,
+			type2,
+			"Non-numeric value on right side of /");
+
+		auto combinedType = inferNumericResult(sys,
+			type1,type2,
+			[](int x, int y) { return y == 0 ? (x < 0 ? INT_MIN : INT_MAX) : x / y; },
+			[](double x, double y) { return x / y; });
+
+		follow(combinedType);
+	}
+
+	void TypeChecker::visitENot(ENot *p) {
+		auto type = visitForType(p);
+		typeStack.push(type);
+
+		checkSOE(p->line_number,
+			sys->Bool,
+			type,
+			"Negation of non-Bool value");
+	}
+
+	void TypeChecker::visitEIdent(EIdent *p) {
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+
+		if(!elem->isDefined()) {
+			auto err = sys->makeError(p->line_number,"Unknown identifier: " + varName);
+			typeStack.push(err);
+		} else {
+			if(elem->type() == nullptr) {
+				elem->declarationPoint->accept(this);
+				typeStack.pop();
+			}
+			assert(elem->type() != nullptr);
+			typeStack.push(elem->type());
+		}
+	}
+
+	void TypeChecker::visitEFuncCall(EFuncCall *p) {
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+
+		if(!elem->isDefined()) {
+			auto err = sys->makeError(p->line_number,"Unknown identifier: " + varName);
+			typeStack.push(err);
+		} else {
+			if(elem->type() == nullptr) {
+				elem->declarationPoint->accept(this);
+				typeStack.pop();
+			}
+			typeStack.push(sys->Unit);
+
+			assert(elem->type() != nullptr);
+			
+			checkFunction(p->line_number,elem->type());
+
+			auto ft = (shimmrType::FunctionType*)elem->type().get();
+
+			auto declArgTypes = ft->argTypes();
+
+			auto argTypes = visitForTypeList(p->listexp_);
+			
+			if(declArgTypes.size() != argTypes.size()) {
+				auto err = sys->makeError(p->line_number,"Number of arguments differ from declaration");
+				follow(err);
+			} else {
+				auto it1 = declArgTypes.begin();
+				auto it2 = argTypes.begin();
+				while(it1 != declArgTypes.end() && it2 != argTypes.end()) {
+					checkSOE(p->line_number,
+						*it1,
+						*it2,
+						"Argument does not correspond to type bound");
+					++it1;
+					++it2;
+				}
+				follow(ft->returnType());
+			}
+		}
+	}
+
+	void TypeChecker::visitArgumentDef(ArgumentDef *p) {
+
+	}
+
+	void TypeChecker::visitListArgument(ListArgument *p) {
+		
+	}
+
+	void TypeChecker::visitEInt(EInt *p) {
+		typeStack.push(sys->makeRange(p->integer_,p->integer_));
 	}
 
 	void TypeChecker::visitEFloat(EFloat *p) {
-
+		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		values.insert(make_shared<shimmrType::FloatTypeValue>(p->double_));
+		typeStack.push(sys->makeSet(values));
 	}
 
 	void TypeChecker::visitEString(EString *p) {
-
+		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		string val(p->string_);
+		values.insert(make_shared<shimmrType::StringTypeValue>(p->string_));
+		typeStack.push(sys->makeSet(values));
 	}
 
 	void TypeChecker::visitListExp(ListExp *p) {
-		p->exp_->accept(this);
-		if(p->listexp_ != nullptr) {
-			p->listexp_->accept(this);
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			(*it)->accept(this);
 		}
 	}
 
 	void TypeChecker::visitEType(EType *p) {
-		auto type = current->typeSystem->get(p->ident_);
-		if(type) {
-			typeStack.push(type);
+		if(sys->Anything->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Anything);
+		} else if(sys->Bool->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Bool);
+		} else if(sys->Float->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Float);
+		} else if(sys->Int->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Int);
+		} else if(sys->Null->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Null);
+		} else if(sys->Numeric->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Numeric);
+		} else if(sys->String->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->String);
+		} else if(sys->Unit->symbol().compare(p->ident_) == 0) {
+			typeStack.push(sys->Unit);
 		} else {
-			string errMsg("Undefined type: ");
-			errMsg.append(p->ident_);
-			typeStack.push(current->typeSystem->makeError(errMsg));
+			typeStack.push(sys->makeError(p->line_number,"Unrecognized type identifier: " + p->ident_));
 		}
 	}
 
 	void TypeChecker::visitVectorType(VectorType *p) {
-		p->type_1->accept(this);
-		auto cType = typeStack.top();
-		typeStack.pop();
-		if(!cType->isError()) {
-			p->type_2->accept(this);
-			auto iType = typeStack.top();
-			typeStack.pop();
-			if(!iType->isError()) {
-				auto type = current->typeSystem->makeVector(cType,iType);
-				typeStack.push(type);
-			} else {
-				typeStack.push(iType);
-			}
-		} else {
-			typeStack.push(cType);
-		}
+		auto iType = visitForType(p->type_1);
+		auto cType = visitForType(p->type_2);
+		typeStack.push(sys->makeVector(iType,cType));
 	}
 
 	void TypeChecker::visitRangeType(RangeType *p) {
@@ -436,13 +881,21 @@ namespace shimmr {
 			msg.append(to_string(p->integer_1));
 			msg.append(" to ");
 			msg.append(to_string(p->integer_2));
-			auto type = current->typeSystem->makeError(msg);
+			auto type = current->typeSystem->makeError(p->line_number,msg);
 			typeStack.push(type);
 		}
 	}
 
 	void TypeChecker::visitSetType(SetType *p) {
+		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
+		int e = typeValueStack.size();
+		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		for(; i < e; i++) {
+			values.insert(typeValueStack.top());
+			typeValueStack.pop();
+		}
+		typeStack.push(current->typeSystem->makeSet(values));
 	}
 
 	void TypeChecker::visitEIntSTE(EIntSTE *p) {
@@ -462,20 +915,20 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitListSetTypeElem(ListSetTypeElem *p) {
-		p->settypeelem_->accept(this);
-		if(p->listsettypeelem_ != nullptr) {
-			p->listsettypeelem_->accept(this);
+		for(auto it = p->begin(); it != p->end(); ++it) {
+			(*it)->accept(this);
 		}
 	}
-
-	void TypeChecker::visitVarAsLExpr(VarAsLExpr *p) {
-
-	}
-
-	void TypeChecker::visitVectorAsLExpr(VectorAsLExpr *p) {
+	
+	void TypeChecker::visitIdent(Ident p) {
 
 	}
 
+	void TypeChecker::visitEVector(EVector *p) {
+
+	}
+
+	
 	void TypeChecker::visitProgram(Program *p) {
 
 	}
@@ -511,11 +964,6 @@ namespace shimmr {
 	void TypeChecker::visitSetTypeElem(SetTypeElem *p) {
 
 	}
-
-	void TypeChecker::visitLExpr(LExpr *p) {
-
-	}
-
 
 	void TypeChecker::visitInteger(Integer i) {
 

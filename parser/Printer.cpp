@@ -1,5 +1,6 @@
 /*** BNFC-Generated Pretty Printer and Abstract Syntax Viewer ***/
 
+#include <string>
 #include "Printer.H"
 
 //You may wish to change render
@@ -51,8 +52,9 @@ void PrintAbsyn::render(Char c)
      bufAppend(' ');
   }
 }
-void PrintAbsyn::render(String s)
+void PrintAbsyn::render(String s_)
 {
+  const char *s = s_.c_str() ;
   if(strlen(s) > 0)
   {
     bufAppend(s);
@@ -124,20 +126,10 @@ void PrintAbsyn::visitStatementBlockStat(StatementBlockStat* p)
 
 void PrintAbsyn::visitListStatement(ListStatement *liststatement)
 {
-  while(liststatement!= 0)
+  for (ListStatement::const_iterator i = liststatement->begin() ; i != liststatement->end() ; ++i)
   {
-    if (liststatement->liststatement_ == 0)
-    {
-      liststatement->statement_->accept(this);
-
-      liststatement = 0;
-    }
-    else
-    {
-      liststatement->statement_->accept(this);
-      render(';');
-      liststatement = liststatement->liststatement_;
-    }
+    (*i)->accept(this);
+    if (i != liststatement->end() - 1) render(';');
   }
 }
 
@@ -248,25 +240,9 @@ void PrintAbsyn::visitConditionalStatement(ConditionalStatement* p)
   int oldi = _i_;
   if (oldi > 0) render(_L_PAREN);
 
-  _i_ = 0; p->lexpr_->accept(this);
-  render('=');
   _i_ = 0; p->exp_1->accept(this);
   render("with");
   _i_ = 0; p->exp_2->accept(this);
-
-  if (oldi > 0) render(_R_PAREN);
-
-  _i_ = oldi;
-}
-
-void PrintAbsyn::visitAbsoluteStatement(AbsoluteStatement* p)
-{
-  int oldi = _i_;
-  if (oldi > 0) render(_L_PAREN);
-
-  _i_ = 0; p->lexpr_->accept(this);
-  render('=');
-  _i_ = 0; p->exp_->accept(this);
 
   if (oldi > 0) render(_R_PAREN);
 
@@ -499,7 +475,7 @@ void PrintAbsyn::visitEEquals(EEquals* p)
   if (oldi > 2) render(_L_PAREN);
 
   _i_ = 2; p->exp_1->accept(this);
-  render("==");
+  render('=');
   _i_ = 3; p->exp_2->accept(this);
 
   if (oldi > 2) render(_R_PAREN);
@@ -658,6 +634,20 @@ void PrintAbsyn::visitEIdent(EIdent* p)
   _i_ = oldi;
 }
 
+void PrintAbsyn::visitEVector(EVector* p)
+{
+  int oldi = _i_;
+  if (oldi > 7) render(_L_PAREN);
+
+  visitIdent(p->ident_);
+  render('[');
+  if(p->listexp_) {_i_ = 0; p->listexp_->accept(this);}  render(']');
+
+  if (oldi > 7) render(_R_PAREN);
+
+  _i_ = oldi;
+}
+
 void PrintAbsyn::visitEFuncCall(EFuncCall* p)
 {
   int oldi = _i_;
@@ -725,39 +715,19 @@ void PrintAbsyn::visitArgumentDef(ArgumentDef* p)
 
 void PrintAbsyn::visitListArgument(ListArgument *listargument)
 {
-  while(listargument!= 0)
+  for (ListArgument::const_iterator i = listargument->begin() ; i != listargument->end() ; ++i)
   {
-    if (listargument->listargument_ == 0)
-    {
-      listargument->argument_->accept(this);
-
-      listargument = 0;
-    }
-    else
-    {
-      listargument->argument_->accept(this);
-      render(',');
-      listargument = listargument->listargument_;
-    }
+    (*i)->accept(this);
+    if (i != listargument->end() - 1) render(',');
   }
 }
 
 void PrintAbsyn::visitListExp(ListExp *listexp)
 {
-  while(listexp!= 0)
+  for (ListExp::const_iterator i = listexp->begin() ; i != listexp->end() ; ++i)
   {
-    if (listexp->listexp_ == 0)
-    {
-      listexp->exp_->accept(this);
-
-      listexp = 0;
-    }
-    else
-    {
-      listexp->exp_->accept(this);
-      render(',');
-      listexp = listexp->listexp_;
-    }
+    (*i)->accept(this);
+    if (i != listexp->end() - 1) render(',');
   }
 }
 
@@ -857,49 +827,11 @@ void PrintAbsyn::visitEStringSTE(EStringSTE* p)
 
 void PrintAbsyn::visitListSetTypeElem(ListSetTypeElem *listsettypeelem)
 {
-  while(listsettypeelem!= 0)
+  for (ListSetTypeElem::const_iterator i = listsettypeelem->begin() ; i != listsettypeelem->end() ; ++i)
   {
-    if (listsettypeelem->listsettypeelem_ == 0)
-    {
-      listsettypeelem->settypeelem_->accept(this);
-
-      listsettypeelem = 0;
-    }
-    else
-    {
-      listsettypeelem->settypeelem_->accept(this);
-      render(',');
-      listsettypeelem = listsettypeelem->listsettypeelem_;
-    }
+    (*i)->accept(this);
+    if (i != listsettypeelem->end() - 1) render(',');
   }
-}
-
-void PrintAbsyn::visitLExpr(LExpr*p) {} //abstract class
-
-void PrintAbsyn::visitVarAsLExpr(VarAsLExpr* p)
-{
-  int oldi = _i_;
-  if (oldi > 0) render(_L_PAREN);
-
-  visitIdent(p->ident_);
-
-  if (oldi > 0) render(_R_PAREN);
-
-  _i_ = oldi;
-}
-
-void PrintAbsyn::visitVectorAsLExpr(VectorAsLExpr* p)
-{
-  int oldi = _i_;
-  if (oldi > 0) render(_L_PAREN);
-
-  _i_ = 0; p->lexpr_->accept(this);
-  render('[');
-  if(p->listexp_) {_i_ = 0; p->listexp_->accept(this);}  render(']');
-
-  if (oldi > 0) render(_R_PAREN);
-
-  _i_ = oldi;
 }
 
 void PrintAbsyn::visitInteger(Integer i)
@@ -920,14 +852,16 @@ void PrintAbsyn::visitChar(Char c)
   bufAppend(c);
   bufAppend('\'');
 }
-void PrintAbsyn::visitString(String s)
+void PrintAbsyn::visitString(String s_)
 {
+  const char *s = s_.c_str() ;
   bufAppend('\"');
   bufAppend(s);
   bufAppend('\"');
 }
-void PrintAbsyn::visitIdent(String s)
+void PrintAbsyn::visitIdent(String s_)
 {
+  const char *s = s_.c_str() ;
   render(s);
 }
 
@@ -974,19 +908,10 @@ void ShowAbsyn::visitStatementBlockStat(StatementBlockStat* p)
 }
 void ShowAbsyn::visitListStatement(ListStatement *liststatement)
 {
-  while(liststatement!= 0)
+  for (ListStatement::const_iterator i = liststatement->begin() ; i != liststatement->end() ; ++i)
   {
-    if (liststatement->liststatement_)
-    {
-      liststatement->statement_->accept(this);
-      bufAppend(", ");
-      liststatement = liststatement->liststatement_;
-    }
-    else
-    {
-      liststatement->statement_->accept(this);
-      liststatement = 0;
-    }
+    (*i)->accept(this);
+    if (i != liststatement->end() - 1) bufAppend(", ");
   }
 }
 
@@ -1091,27 +1016,9 @@ void ShowAbsyn::visitConditionalStatement(ConditionalStatement* p)
   bufAppend('(');
   bufAppend("ConditionalStatement");
   bufAppend(' ');
-  bufAppend('[');
-  if (p->lexpr_)  p->lexpr_->accept(this);
-  bufAppend(']');
-  bufAppend(' ');
   p->exp_1->accept(this);
   bufAppend(' ');
   p->exp_2->accept(this);
-  bufAppend(')');
-}
-void ShowAbsyn::visitAbsoluteStatement(AbsoluteStatement* p)
-{
-  bufAppend('(');
-  bufAppend("AbsoluteStatement");
-  bufAppend(' ');
-  bufAppend('[');
-  if (p->lexpr_)  p->lexpr_->accept(this);
-  bufAppend(']');
-  bufAppend(' ');
-  bufAppend('[');
-  if (p->exp_)  p->exp_->accept(this);
-  bufAppend(']');
   bufAppend(')');
 }
 void ShowAbsyn::visitExpAsStatement(ExpAsStatement* p)
@@ -1418,6 +1325,19 @@ void ShowAbsyn::visitEIdent(EIdent* p)
   visitIdent(p->ident_);
   bufAppend(')');
 }
+void ShowAbsyn::visitEVector(EVector* p)
+{
+  bufAppend('(');
+  bufAppend("EVector");
+  bufAppend(' ');
+  visitIdent(p->ident_);
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->listexp_)  p->listexp_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend(')');
+}
 void ShowAbsyn::visitEFuncCall(EFuncCall* p)
 {
   bufAppend('(');
@@ -1471,37 +1391,19 @@ void ShowAbsyn::visitArgumentDef(ArgumentDef* p)
 }
 void ShowAbsyn::visitListArgument(ListArgument *listargument)
 {
-  while(listargument!= 0)
+  for (ListArgument::const_iterator i = listargument->begin() ; i != listargument->end() ; ++i)
   {
-    if (listargument->listargument_)
-    {
-      listargument->argument_->accept(this);
-      bufAppend(", ");
-      listargument = listargument->listargument_;
-    }
-    else
-    {
-      listargument->argument_->accept(this);
-      listargument = 0;
-    }
+    (*i)->accept(this);
+    if (i != listargument->end() - 1) bufAppend(", ");
   }
 }
 
 void ShowAbsyn::visitListExp(ListExp *listexp)
 {
-  while(listexp!= 0)
+  for (ListExp::const_iterator i = listexp->begin() ; i != listexp->end() ; ++i)
   {
-    if (listexp->listexp_)
-    {
-      listexp->exp_->accept(this);
-      bufAppend(", ");
-      listexp = listexp->listexp_;
-    }
-    else
-    {
-      listexp->exp_->accept(this);
-      listexp = 0;
-    }
+    (*i)->accept(this);
+    if (i != listexp->end() - 1) bufAppend(", ");
   }
 }
 
@@ -1575,47 +1477,13 @@ void ShowAbsyn::visitEStringSTE(EStringSTE* p)
 }
 void ShowAbsyn::visitListSetTypeElem(ListSetTypeElem *listsettypeelem)
 {
-  while(listsettypeelem!= 0)
+  for (ListSetTypeElem::const_iterator i = listsettypeelem->begin() ; i != listsettypeelem->end() ; ++i)
   {
-    if (listsettypeelem->listsettypeelem_)
-    {
-      listsettypeelem->settypeelem_->accept(this);
-      bufAppend(", ");
-      listsettypeelem = listsettypeelem->listsettypeelem_;
-    }
-    else
-    {
-      listsettypeelem->settypeelem_->accept(this);
-      listsettypeelem = 0;
-    }
+    (*i)->accept(this);
+    if (i != listsettypeelem->end() - 1) bufAppend(", ");
   }
 }
 
-void ShowAbsyn::visitLExpr(LExpr* p) {} //abstract class
-
-void ShowAbsyn::visitVarAsLExpr(VarAsLExpr* p)
-{
-  bufAppend('(');
-  bufAppend("VarAsLExpr");
-  bufAppend(' ');
-  visitIdent(p->ident_);
-  bufAppend(')');
-}
-void ShowAbsyn::visitVectorAsLExpr(VectorAsLExpr* p)
-{
-  bufAppend('(');
-  bufAppend("VectorAsLExpr");
-  bufAppend(' ');
-  bufAppend('[');
-  if (p->lexpr_)  p->lexpr_->accept(this);
-  bufAppend(']');
-  bufAppend(' ');
-  bufAppend('[');
-  if (p->listexp_)  p->listexp_->accept(this);
-  bufAppend(']');
-  bufAppend(' ');
-  bufAppend(')');
-}
 void ShowAbsyn::visitInteger(Integer i)
 {
   char tmp[16];
@@ -1634,14 +1502,16 @@ void ShowAbsyn::visitChar(Char c)
   bufAppend(c);
   bufAppend('\'');
 }
-void ShowAbsyn::visitString(String s)
+void ShowAbsyn::visitString(String s_)
 {
+  const char *s = s_.c_str() ;
   bufAppend('\"');
   bufAppend(s);
   bufAppend('\"');
 }
-void ShowAbsyn::visitIdent(String s)
+void ShowAbsyn::visitIdent(String s_)
 {
+  const char *s = s_.c_str() ;
   bufAppend('\"');
   bufAppend(s);
   bufAppend('\"');

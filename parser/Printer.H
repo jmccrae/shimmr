@@ -40,7 +40,6 @@ class PrintAbsyn : public Visitor
   void visitSomeStatement(SomeStatement *p);
   void visitSomeElseStatement(SomeElseStatement *p);
   void visitConditionalStatement(ConditionalStatement *p);
-  void visitAbsoluteStatement(AbsoluteStatement *p);
   void visitExpAsStatement(ExpAsStatement *p);
   void visitDecl(Decl *p); /* abstract class */
   void visitSimpleDecl(SimpleDecl *p);
@@ -70,6 +69,7 @@ class PrintAbsyn : public Visitor
   void visitEDiv(EDiv *p);
   void visitENot(ENot *p);
   void visitEIdent(EIdent *p);
+  void visitEVector(EVector *p);
   void visitEFuncCall(EFuncCall *p);
   void visitEInt(EInt *p);
   void visitEFloat(EFloat *p);
@@ -88,9 +88,6 @@ class PrintAbsyn : public Visitor
   void visitEFloatSTE(EFloatSTE *p);
   void visitEStringSTE(EStringSTE *p);
   void visitListSetTypeElem(ListSetTypeElem* p);
-  void visitLExpr(LExpr *p); /* abstract class */
-  void visitVarAsLExpr(VarAsLExpr *p);
-  void visitVectorAsLExpr(VectorAsLExpr *p);
 
   void visitInteger(Integer i);
   void visitDouble(Double d);
@@ -172,7 +169,6 @@ class ShowAbsyn : public Visitor
   void visitSomeStatement(SomeStatement *p);
   void visitSomeElseStatement(SomeElseStatement *p);
   void visitConditionalStatement(ConditionalStatement *p);
-  void visitAbsoluteStatement(AbsoluteStatement *p);
   void visitExpAsStatement(ExpAsStatement *p);
   void visitDecl(Decl *p); /* abstract class */
   void visitSimpleDecl(SimpleDecl *p);
@@ -202,6 +198,7 @@ class ShowAbsyn : public Visitor
   void visitEDiv(EDiv *p);
   void visitENot(ENot *p);
   void visitEIdent(EIdent *p);
+  void visitEVector(EVector *p);
   void visitEFuncCall(EFuncCall *p);
   void visitEInt(EInt *p);
   void visitEFloat(EFloat *p);
@@ -220,9 +217,6 @@ class ShowAbsyn : public Visitor
   void visitEFloatSTE(EFloatSTE *p);
   void visitEStringSTE(EStringSTE *p);
   void visitListSetTypeElem(ListSetTypeElem* p);
-  void visitLExpr(LExpr *p); /* abstract class */
-  void visitVarAsLExpr(VarAsLExpr *p);
-  void visitVectorAsLExpr(VectorAsLExpr *p);
 
   void visitInteger(Integer i);
   void visitDouble(Double d);

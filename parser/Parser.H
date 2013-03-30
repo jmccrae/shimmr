@@ -1,6 +1,9 @@
 #ifndef PARSER_HEADER_FILE
 #define PARSER_HEADER_FILE
 
+#include<vector>
+#include<string>
+
 class Program;
 class StatementBlock;
 class ListStatement;
@@ -14,7 +17,6 @@ class ListExp;
 class Type;
 class SetTypeElem;
 class ListSetTypeElem;
-class LExpr;
 
 typedef union
 {
@@ -35,7 +37,6 @@ typedef union
   Type* type_;
   SetTypeElem* settypeelem_;
   ListSetTypeElem* listsettypeelem_;
-  LExpr* lexpr_;
 } YYSTYPE;
 
 #define _ERROR_ 258
@@ -70,11 +71,10 @@ typedef union
 #define _SYMB_28 287
 #define _SYMB_29 288
 #define _SYMB_30 289
-#define _SYMB_31 290
-#define __STRING_ 291
-#define _INTEGER_ 292
-#define _DOUBLE_ 293
-#define _IDENT_ 294
+#define __STRING_ 290
+#define _INTEGER_ 291
+#define _DOUBLE_ 292
+#define _IDENT_ 293
 
 extern YYSTYPE yylval;
 Program* pProgram(FILE *inp);
@@ -90,7 +90,6 @@ ListExp* pListExp(FILE *inp);
 Type* pType(FILE *inp);
 SetTypeElem* pSetTypeElem(FILE *inp);
 ListSetTypeElem* pListSetTypeElem(FILE *inp);
-LExpr* pLExpr(FILE *inp);
 
 
 #endif
