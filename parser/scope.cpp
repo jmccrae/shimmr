@@ -44,7 +44,15 @@ namespace shimmr {
 	std::shared_ptr<Scope> Scope::root() {
 		auto scope = new Scope(nullptr);
 		shared_ptr<Scope> sp(scope);
+		sp->prelude();
 		return sp;
+	}
+
+	void Scope::prelude() {
+		assign(make_shared<ScopeElement>(this,typeSystem->Bool,nullptr),"true");
+		assign(make_shared<ScopeElement>(this,typeSystem->Bool,nullptr),"false");
+		assign(make_shared<ScopeElement>(this,typeSystem->Null,nullptr),"null");
+		assign(make_shared<ScopeElement>(this,typeSystem->Unit,nullptr),"noop");
 	}
 
 	bool Scope::isActive(const std::string& name) {

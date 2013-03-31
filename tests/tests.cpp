@@ -135,7 +135,7 @@ TEST(FunctionCall) {
 TEST(WeightedStatements) {
 	auto result = getAST("val y = 3 ; y = 3 with 10");
 	CHECK(result);
-	result = getAST("def foo(Int x, Int y) { x + y } ; val x = foo(3+4,2*5) with 5");
+	result = getAST("def foo(Int x, Int y) { x + y } ; val x = foo(3+4,2*5) with 5;");
 	CHECK(result);
 }
 

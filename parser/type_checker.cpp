@@ -172,7 +172,7 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitBareDecl(BareDecl *p) {
-		// Ignored (type already decided by scope inferrer
+		typeStack.push(sys->Unit);
 	}
 
 	void TypeChecker::visitEFuncDecl(EFuncDecl *p) {
@@ -200,6 +200,8 @@ namespace shimmr {
 		auto s = current->children[p];
 		current = s.get();
 
+		auto declRetType = visitForType(p->type_);
+
 		auto argList = visitForTypeList(p->listargument_);
 
 		auto retType = visitForType(p->statementblock_);
@@ -211,7 +213,7 @@ namespace shimmr {
 		string varName(p->ident_);
 		auto elem = current->resolve(varName);
 
-		checkSOE(p->line_number,elem->type(),funcType,
+		checkSOE(p->line_number,declRetType,retType,
 			"Function declared as " + elem->type()->symbol() + " but return type was " + retType->symbol());
 
 		follow(sys->Unit);
@@ -272,10 +274,11 @@ namespace shimmr {
 		current = s.get();
 
 		auto statType = visitForType(p->statementblock_);
+		current = current->parent;
+
 		auto elseType = visitForType(p->elseblock_);
 		follow(statType->or(elseType));
 
-		current = current->parent;
 	}
 
 	void TypeChecker::visitElseIfBlock(ElseIfBlock *p) {
@@ -309,10 +312,10 @@ namespace shimmr {
 		current = s.get();
 
 		auto statType = visitForType(p->statementblock_);
+		current = current->parent;
 		auto elseType = visitForType(p->elseblock_);
 		follow(statType->or(elseType));
 
-		current = current->parent;
 
 	}
 
@@ -327,11 +330,12 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitElseFailStat(ElseFailStat *p) {
-		typeStack.push(sys->Null);
+		auto symbols = make_shared<set<string>>();
+		typeStack.push(sys->makeUnion(symbols,symbols));
 	}
 
 	void TypeChecker::visitSomeStatement(SomeStatement *p) {
-		auto expType = visitForType(p);
+		auto expType = visitForType(p->exp_);
 		typeStack.push(expType);
 
 		checkCollection(p->line_number,
@@ -346,14 +350,14 @@ namespace shimmr {
 
 		auto statType = visitForType(p->statementblock_);
 		follow(statType);
-
-		follow(sys->makeVector(statType,expType->indexType())->or(sys->Null));
+		
+		follow(expType->contentType()->or(sys->Null));
 
 		current = current->parent;
 	}
 
 	void TypeChecker::visitSomeElseStatement(SomeElseStatement *p) {
-		auto expType = visitForType(p);
+		auto expType = visitForType(p->exp_);
 		typeStack.push(expType);
 
 		checkCollection(p->line_number,
@@ -372,7 +376,7 @@ namespace shimmr {
 		auto elseType = visitForType(p->elseblock_);
 		follow(elseType);
 
-		follow(sys->makeVector(statType,expType->indexType())->or(elseType));
+		follow(expType->contentType()->or(elseType));
 
 		current = current->parent;
 
@@ -389,7 +393,8 @@ namespace shimmr {
 			"Conditional statement has non-numeric with clause");
 		
 		auto type1 = visitForType(p->exp_1);
-		follow(type1);
+
+		follow(type1->or(sys->Null));
 	}
 
 	void TypeChecker::visitExpAsStatement(ExpAsStatement *p) {
@@ -414,6 +419,8 @@ namespace shimmr {
 			sys->Bool,
 			type2,
 			"Right-side of || not a Bool");
+
+		follow(sys->Bool);
 	}
 
 	void TypeChecker::visitEAnd(EAnd *p) {
@@ -432,6 +439,8 @@ namespace shimmr {
 			sys->Bool,
 			type2,
 			"Right-side of && not a Bool");
+
+		follow(sys->Bool);
 	}
 
 	void TypeChecker::visitEEquals(EEquals *p) {
@@ -445,6 +454,8 @@ namespace shimmr {
 			type1,
 			type2,
 			"Assignment does not conform to type bounds");
+
+		follow(sys->Bool);
 	}
 
 	void TypeChecker::visitENEq(ENEq *p) {
@@ -458,6 +469,8 @@ namespace shimmr {
 			type1,
 			type2,
 			"Assignment does not conform to type bounds");
+
+		follow(sys->Bool);
 	}
 
 	void TypeChecker::visitELeq(ELeq *p) {
@@ -547,7 +560,13 @@ namespace shimmr {
 		function<int (int,int)> iTransform,
 		function<double (double,double)> dTransform) {
 
-		if(t1->isEqual(sys->Numeric)) {
+		if(t1->isError() && t2->isError()) {
+			return t1->or(t2);
+		} else if(t1->isError()) {
+			return t1;
+		} else if(t2->isError()) {
+			return t2;
+		} else if(t1->isEqual(sys->Numeric)) {
 			return t1;
 		} else if(t2->isEqual(sys->Numeric)) {
 			return t2;
@@ -640,11 +659,13 @@ namespace shimmr {
 			} else {
 				return sys->makeError(-1, "[INTERNAL] t1 range, t2 not a set or range");
 			}
+		} else {
+			return sys->makeError(-1,"[INTERNAL] not a recognized numeric");
 		}
 	}
 
 	void TypeChecker::visitEAdd(EAdd *p) {
-		auto type1 = visitForType(p);
+		auto type1 = visitForType(p->exp_1);
 		typeStack.push(type1);
 
 		checkSOE(p->line_number,
@@ -652,7 +673,7 @@ namespace shimmr {
 			type1,
 			"Non-numeric value on left side of +");
 
-		auto type2 = visitForType(p);
+		auto type2 = visitForType(p->exp_2);
 		follow(type2);
 
 		checkSOE(p->line_number,
@@ -669,7 +690,7 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitESub(ESub *p) {
-		auto type1 = visitForType(p);
+		auto type1 = visitForType(p->exp_1);
 		typeStack.push(type1);
 
 		checkSOE(p->line_number,
@@ -677,7 +698,7 @@ namespace shimmr {
 			type1,
 			"Non-numeric value on left side of -");
 
-		auto type2 = visitForType(p);
+		auto type2 = visitForType(p->exp_2);
 		follow(type2);
 
 		checkSOE(p->line_number,
@@ -694,7 +715,7 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitEMul(EMul *p) {
-		auto type1 = visitForType(p);
+		auto type1 = visitForType(p->exp_1);
 		typeStack.push(type1);
 
 		checkSOE(p->line_number,
@@ -702,7 +723,7 @@ namespace shimmr {
 			type1,
 			"Non-numeric value on left side of *");
 
-		auto type2 = visitForType(p);
+		auto type2 = visitForType(p->exp_2);
 		follow(type2);
 
 		checkSOE(p->line_number,
@@ -719,7 +740,7 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitEDiv(EDiv *p) {
-		auto type1 = visitForType(p);
+		auto type1 = visitForType(p->exp_1);
 		typeStack.push(type1);
 
 		checkSOE(p->line_number,
@@ -727,7 +748,7 @@ namespace shimmr {
 			type1,
 			"Non-numeric value on left side of /");
 
-		auto type2 = visitForType(p);
+		auto type2 = visitForType(p->exp_2);
 		follow(type2);
 
 		checkSOE(p->line_number,
@@ -744,7 +765,7 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitENot(ENot *p) {
-		auto type = visitForType(p);
+		auto type = visitForType(p->exp_);
 		typeStack.push(type);
 
 		checkSOE(p->line_number,
@@ -919,12 +940,40 @@ namespace shimmr {
 			(*it)->accept(this);
 		}
 	}
-	
-	void TypeChecker::visitIdent(Ident p) {
-
-	}
 
 	void TypeChecker::visitEVector(EVector *p) {
+		string varName(p->ident_);
+		auto elem = current->resolve(varName);
+
+		auto t = elem->type();
+
+		typeStack.push(t);
+
+		if(p->listexp_->empty()) {
+			follow(sys->makeError(p->line_number,"Empty index list"));
+		}
+
+		for(auto it = p->listexp_->rbegin(); it != p->listexp_->rend(); ++it)  {
+			checkCollection(p->line_number,t);
+			auto type = visitForType(*it);
+
+			checkSOE(p->line_number,
+				t->indexType(),
+				type,
+				"Vector index does not conform to type bounds");
+
+			if(t->isCollection()) {
+				t = t->contentType();
+			} else {
+				break;
+			}
+		}
+
+		follow(t);
+	}
+
+	
+	void TypeChecker::visitIdent(Ident p) {
 
 	}
 

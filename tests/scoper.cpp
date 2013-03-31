@@ -1,5 +1,3 @@
-// tests.cpp : All tests for Shimmr
-//
 #include <UnitTest++.h>
 #include "../parser/type.h"
 #include "../parser/scope_inferrer.h"

@@ -16,7 +16,7 @@ namespace shimmr {
 	{
 	}
 
-	shared_ptr<Scope> ScopeInferrer::infer(Program *p) {
+	shared_ptr<Scope> ScopeInferrer::infer(Visitable *p) {
 		ScopeInferrer *inferrer = new ScopeInferrer();
 		p->accept(inferrer);
 		auto rv = inferrer->root;
@@ -108,6 +108,10 @@ namespace shimmr {
 		p->type_->accept(this);
 		auto retType = typeStack.top();
 		typeStack.pop();
+
+		auto s = current->makeChildScope(p);
+		current = s.get();
+		
 		int i = typeStack.size();
 		p->listargument_->accept(this);
 		vector<shared_ptr<shimmrType::Type>> argList;
@@ -119,13 +123,11 @@ namespace shimmr {
 		reverse(argList.begin(),argList.end());
 		auto type = current->typeSystem->makeFunction(retType,argList);
 		auto elem = make_shared<ScopeElement>(current,type,p);
-		current->assign(elem,varName);
 
-		auto s = current->makeChildScope(p);
-		current = s.get();
-		p->listargument_->accept(this);
 		p->statementblock_->accept(this);
 		current = current->parent;
+
+		current->assign(elem,varName);
 	}
 
 	void ScopeInferrer::visitForStatement(ForStatement *p) {
@@ -164,7 +166,6 @@ namespace shimmr {
 		current = s.get();
 		p->statementblock_->accept(this);
 		current = current->parent;
-
 	}
 
 	void ScopeInferrer::visitElseIf2Block(ElseIf2Block *p) {
@@ -315,7 +316,6 @@ namespace shimmr {
 		string varName(p->ident_);
 		p->type_->accept(this);
 		auto type = typeStack.top();
-		typeStack.pop();
 		auto elem = make_shared<ScopeElement>(current,type,p);
 		current->assign(elem,varName);
 	}

@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClCompile Include="scoper.cpp" />
     <ClCompile Include="tests.cpp" />
+    <ClCompile Include="test_checker.cpp" />
     <ClCompile Include="type_axioms.cpp" />
   </ItemGroup>
   <ItemGroup>

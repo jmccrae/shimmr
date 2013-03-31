@@ -65,6 +65,7 @@ namespace shimmr {
 		void setActive(const std::string& name);
 		void setInactive(const std::string& name);
 	private:
+		void prelude();
 		void operator=(Scope const&) { }
 	};
 

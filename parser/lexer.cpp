@@ -2081,7 +2081,8 @@ void yyfree (void * ptr )
 #line 81 "shimmr.l"
 
 
-int initialize_lexer(FILE *inp) { yyin = inp; BEGIN YYINITIAL; return 0; }
+int initialize_lexer(FILE *inp) { yyin = inp; YY_FLUSH_BUFFER; BEGIN YYINITIAL; return 0; }
 int yywrap(void) { return 1; }
+
 
 

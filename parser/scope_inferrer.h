@@ -15,7 +15,7 @@ namespace shimmr {
 		ScopeInferrer(void);
 	public:
 		~ScopeInferrer(void);
-		static std::shared_ptr<Scope> infer(Program *p);
+		static std::shared_ptr<Scope> infer(Visitable *p);
 
 		virtual void visitStatements(Statements *p);
 		virtual void visitStatementBlockStat(StatementBlockStat *p);
@@ -84,5 +84,6 @@ namespace shimmr {
 		virtual void visitDouble(Double d);
 		virtual void visitChar(Char c);
 		virtual void visitString(String s);
+
 	};
 }

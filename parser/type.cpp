@@ -188,12 +188,16 @@ namespace shimmrType {
 				members.push_back(*i1);
 			}
 		}
-		auto i1 = members.begin();
-		_symbol.append((*i1)->symbol());
-		++i1;
-		for(; i1 != members.end(); ++i1) {
-			_symbol.append("|");
+		if(members.empty()) {
+			_symbol.append("$EMPTY$");
+		} else {
+			auto i1 = members.begin();
 			_symbol.append((*i1)->symbol());
+			++i1;
+			for(; i1 != members.end(); ++i1) {
+				_symbol.append("|");
+				_symbol.append((*i1)->symbol());
+			}
 		}
 	}
 
@@ -616,7 +620,7 @@ namespace shimmrType {
 	}
 
 	const TypeValueType FloatTypeValue::type() const {
-		return tvtInt;
+		return tvtFloat;
 	}
 
 	const double FloatTypeValue::floatValue() const {

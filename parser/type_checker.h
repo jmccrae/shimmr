@@ -14,8 +14,8 @@ namespace shimmr {
 		Scope *current;
 		std::stack<std::shared_ptr<shimmrType::Type>> typeStack;
 		std::stack<std::shared_ptr<shimmrType::TypeValue>> typeValueStack;
-		TypeChecker(std::shared_ptr<Scope>);
 	public:
+		TypeChecker(std::shared_ptr<Scope>);
 		~TypeChecker();
 		static std::shared_ptr<shimmrType::Type> check(Program *p, std::shared_ptr<Scope> scope);
 
@@ -86,7 +86,11 @@ namespace shimmr {
 		virtual void visitDouble(Double d);
 		virtual void visitChar(Char c);
 		virtual void visitString(String s);
-
+		
+		// For unit testing not production!
+		int typeStackSize() { return typeStack.size(); }
+		int typeValueStackSize() { return typeValueStack.size(); }
+		std::shared_ptr<shimmrType::Type> topType() { return typeStack.top(); }
 	private:
 		std::shared_ptr<shimmrType::Type> visitForType(Visitable *);
 		std::vector<std::shared_ptr<shimmrType::Type>> visitForTypeList(Visitable *);
