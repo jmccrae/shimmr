@@ -71,6 +71,8 @@ class PrintAbsyn : public Visitor
   void visitEIdent(EIdent *p);
   void visitEVector(EVector *p);
   void visitEFuncCall(EFuncCall *p);
+  void visitERange(ERange *p);
+  void visitESet(ESet *p);
   void visitEInt(EInt *p);
   void visitEFloat(EFloat *p);
   void visitEString(EString *p);
@@ -200,6 +202,8 @@ class ShowAbsyn : public Visitor
   void visitEIdent(EIdent *p);
   void visitEVector(EVector *p);
   void visitEFuncCall(EFuncCall *p);
+  void visitERange(ERange *p);
+  void visitESet(ESet *p);
   void visitEInt(EInt *p);
   void visitEFloat(EFloat *p);
   void visitEString(EString *p);

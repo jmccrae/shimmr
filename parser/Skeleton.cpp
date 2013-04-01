@@ -354,6 +354,23 @@ void Skeleton::visitEFuncCall(EFuncCall *efunccall)
 
 }
 
+void Skeleton::visitERange(ERange *erange)
+{
+  /* Code For ERange Goes Here */
+
+  visitInteger(erange->integer_1);
+  visitInteger(erange->integer_2);
+
+}
+
+void Skeleton::visitESet(ESet *eset)
+{
+  /* Code For ESet Goes Here */
+
+  eset->listsettypeelem_->accept(this);
+
+}
+
 void Skeleton::visitEInt(EInt *eint)
 {
   /* Code For EInt Goes Here */

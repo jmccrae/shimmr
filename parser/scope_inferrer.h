@@ -55,6 +55,8 @@ namespace shimmr {
 		virtual void visitEIdent(EIdent *p);
 		virtual void visitEFuncCall(EFuncCall *p);
 		virtual void visitArgumentDef(ArgumentDef *p);
+		virtual void visitERange(ERange *p);
+		virtual void visitESet(ESet *p);
 		virtual void visitListArgument(ListArgument *p);
 		virtual void visitEInt(EInt *p);
 		virtual void visitEFloat(EFloat *p);

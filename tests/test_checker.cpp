@@ -280,6 +280,24 @@ TEST(TCForStatement) {
 	CHECK_EQUAL("{\"test\"}[1:3]",checker->topType()->symbol());
 	delete stat;
 	delete checker;
+
+	stat = getAST_Program("for(i in 1:3) { \"test\" }");
+	checker = new TypeChecker(ScopeInferrer::infer(stat));
+	stat->accept(checker);
+	CHECK_EQUAL(1,checker->typeStackSize());
+	CHECK_EQUAL(0,checker->typeValueStackSize());
+	CHECK_EQUAL("{\"test\"}[1:3]",checker->topType()->symbol());
+	delete stat;
+	delete checker;
+
+	stat = getAST_Program("for(i in {1,2,3}) { \"test\" }");
+	checker = new TypeChecker(ScopeInferrer::infer(stat));
+	stat->accept(checker);
+	CHECK_EQUAL(1,checker->typeStackSize());
+	CHECK_EQUAL(0,checker->typeValueStackSize());
+	CHECK_EQUAL("{\"test\"}[{1,2,3}]",checker->topType()->symbol());
+	delete stat;
+	delete checker;
 }
 
 TEST(TCIfStatement) {

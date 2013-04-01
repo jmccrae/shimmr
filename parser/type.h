@@ -200,9 +200,6 @@ namespace shimmrType {
 		virtual bool isSet() const;
 		virtual bool canMerge(const std::shared_ptr<Type>) const;
 		virtual std::shared_ptr<Type> merge(const std::shared_ptr<Type>) const;
-		virtual bool isCollection() const;
-		virtual std::shared_ptr<Type> contentType() const;
-		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	class RangeType : public Type {
@@ -219,9 +216,6 @@ namespace shimmrType {
 		virtual bool isRange() const;
 		virtual bool canMerge(const std::shared_ptr<Type>) const;
 		virtual std::shared_ptr<Type> merge(const std::shared_ptr<Type>) const;
-		virtual bool isCollection() const;
-		virtual std::shared_ptr<Type> contentType() const;
-		virtual std::shared_ptr<Type> indexType() const;
 	};
 
 	class FunctionType : public Type {

@@ -54,6 +54,8 @@ public:
   void visitEVector(EVector* p);
   void visitEFuncCall(EFuncCall* p);
   void visitArgumentDef(ArgumentDef* p);
+  void visitERange(ERange* p);
+  void visitESet(ESet* p);
   void visitEInt(EInt* p);
   void visitEFloat(EFloat* p);
   void visitEString(EString* p);

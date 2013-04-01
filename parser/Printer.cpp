@@ -662,6 +662,33 @@ void PrintAbsyn::visitEFuncCall(EFuncCall* p)
   _i_ = oldi;
 }
 
+void PrintAbsyn::visitERange(ERange* p)
+{
+  int oldi = _i_;
+  if (oldi > 7) render(_L_PAREN);
+
+  visitInteger(p->integer_1);
+  render(':');
+  visitInteger(p->integer_2);
+
+  if (oldi > 7) render(_R_PAREN);
+
+  _i_ = oldi;
+}
+
+void PrintAbsyn::visitESet(ESet* p)
+{
+  int oldi = _i_;
+  if (oldi > 7) render(_L_PAREN);
+
+  render('{');
+  if(p->listsettypeelem_) {_i_ = 0; p->listsettypeelem_->accept(this);}  render('}');
+
+  if (oldi > 7) render(_R_PAREN);
+
+  _i_ = oldi;
+}
+
 void PrintAbsyn::visitEInt(EInt* p)
 {
   int oldi = _i_;
@@ -1347,6 +1374,27 @@ void ShowAbsyn::visitEFuncCall(EFuncCall* p)
   bufAppend(' ');
   bufAppend('[');
   if (p->listexp_)  p->listexp_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend(')');
+}
+void ShowAbsyn::visitERange(ERange* p)
+{
+  bufAppend('(');
+  bufAppend("ERange");
+  bufAppend(' ');
+  visitInteger(p->integer_1);
+  bufAppend(' ');
+  visitInteger(p->integer_2);
+  bufAppend(')');
+}
+void ShowAbsyn::visitESet(ESet* p)
+{
+  bufAppend('(');
+  bufAppend("ESet");
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->listsettypeelem_)  p->listsettypeelem_->accept(this);
   bufAppend(']');
   bufAppend(' ');
   bufAppend(')');

@@ -464,19 +464,6 @@ namespace shimmrType {
 		return true;
 	}
 	
-	bool SetType::isCollection() const {
-		return true;
-	}
-
-	shared_ptr<Type> SetType::contentType() const {
-		return sys->get(_symbol);
-	}
-
-	shared_ptr<Type> SetType::indexType() const {
-		return sys->get(_symbol);
-	}
-
-	
 	RangeType::RangeType(TypeSystem*s,const int lowerBound, const int upperBound) : Type(s), lb(lowerBound), ub(upperBound) {
 		_symbol.append(to_string(lowerBound));
 		_symbol.append(":");
@@ -546,18 +533,6 @@ namespace shimmrType {
 
 	bool RangeType::isRange() const {
 		return true;
-	}
-
-	bool RangeType::isCollection() const {
-		return true;
-	}
-
-	shared_ptr<Type> RangeType::contentType() const {
-		return sys->get(_symbol);
-	}
-
-	shared_ptr<Type> RangeType::indexType() const {
-		return sys->get(_symbol);
 	}
 
 	const string& TypeValue::stringValue() const {

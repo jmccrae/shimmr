@@ -66,6 +66,8 @@ class EIdent;
 class EVector;
 class EFuncCall;
 class ArgumentDef;
+class ERange;
+class ESet;
 class EInt;
 class EFloat;
 class EString;
@@ -134,6 +136,8 @@ public:
   virtual void visitEVector(EVector *p) = 0;
   virtual void visitEFuncCall(EFuncCall *p) = 0;
   virtual void visitArgumentDef(ArgumentDef *p) = 0;
+  virtual void visitERange(ERange *p) = 0;
+  virtual void visitESet(ESet *p) = 0;
   virtual void visitEInt(EInt *p) = 0;
   virtual void visitEFloat(EFloat *p) = 0;
   virtual void visitEString(EString *p) = 0;
@@ -791,6 +795,35 @@ public:
   virtual void accept(Visitor *v);
   virtual EFuncCall *clone() const;
   void swap(EFuncCall &);
+};
+
+class ERange : public Exp
+{
+public:
+  Integer integer_1;
+  Integer integer_2;
+
+  ERange(const ERange &);
+  ERange &operator=(const ERange &);
+  ERange(Integer p1, Integer p2);
+  ~ERange();
+  virtual void accept(Visitor *v);
+  virtual ERange *clone() const;
+  void swap(ERange &);
+};
+
+class ESet : public Exp
+{
+public:
+  ListSetTypeElem *listsettypeelem_;
+
+  ESet(const ESet &);
+  ESet &operator=(const ESet &);
+  ESet(ListSetTypeElem *p1);
+  ~ESet();
+  virtual void accept(Visitor *v);
+  virtual ESet *clone() const;
+  void swap(ESet &);
 };
 
 class EInt : public Exp

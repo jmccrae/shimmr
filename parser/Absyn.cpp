@@ -1783,6 +1783,96 @@ EFuncCall *EFuncCall::clone() const
 
 
 
+/********************   ERange    ********************/
+ERange::ERange(Integer p1, Integer p2)
+{
+  integer_1 = p1;
+  integer_2 = p2;
+
+}
+
+ERange::ERange(const ERange & other)
+{
+  integer_1 = other.integer_1;
+  integer_2 = other.integer_2;
+
+}
+
+ERange &ERange::operator=(const ERange & other)
+{
+  ERange tmp(other);
+  swap(tmp);
+  return *this;
+}
+
+void ERange::swap(ERange & other)
+{
+  std::swap(integer_1, other.integer_1);
+  std::swap(integer_2, other.integer_2);
+
+}
+
+ERange::~ERange()
+{
+
+}
+
+void ERange::accept(Visitor *v)
+{
+  v->visitERange(this);
+}
+
+ERange *ERange::clone() const
+{
+  return new ERange(*this);
+}
+
+
+
+/********************   ESet    ********************/
+ESet::ESet(ListSetTypeElem *p1)
+{
+  listsettypeelem_ = p1;
+
+}
+
+ESet::ESet(const ESet & other)
+{
+  listsettypeelem_ = other.listsettypeelem_->clone();
+
+}
+
+ESet &ESet::operator=(const ESet & other)
+{
+  ESet tmp(other);
+  swap(tmp);
+  return *this;
+}
+
+void ESet::swap(ESet & other)
+{
+  std::swap(listsettypeelem_, other.listsettypeelem_);
+
+}
+
+ESet::~ESet()
+{
+  delete(listsettypeelem_);
+
+}
+
+void ESet::accept(Visitor *v)
+{
+  v->visitESet(this);
+}
+
+ESet *ESet::clone() const
+{
+  return new ESet(*this);
+}
+
+
+
 /********************   EInt    ********************/
 EInt::EInt(Integer p1)
 {

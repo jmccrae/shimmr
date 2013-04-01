@@ -311,6 +311,14 @@ namespace shimmr {
 	void ScopeInferrer::visitEFuncCall(EFuncCall *p) {
 		p->listexp_->accept(this);
 	}
+	
+	void ScopeInferrer::visitERange(ERange *p) {
+
+	}
+
+	void ScopeInferrer::visitESet(ESet *p) {
+
+	}
 
 	void ScopeInferrer::visitArgumentDef(ArgumentDef *p) {
 		string varName(p->ident_);

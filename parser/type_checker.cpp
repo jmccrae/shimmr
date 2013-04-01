@@ -841,6 +841,28 @@ namespace shimmr {
 	void TypeChecker::visitListArgument(ListArgument *p) {
 		
 	}
+		
+	void TypeChecker::visitERange(ERange *p) {
+		if(p->integer_1 > p->integer_2) {
+			typeStack.push(sys->makeError(p->line_number,"Range has smaller lower bound than upper bound"));
+		} else {
+			auto range = sys->makeRange(p->integer_1,p->integer_2);
+			typeStack.push(sys->makeVector(range,range));
+		}
+	}
+		
+	void TypeChecker::visitESet(ESet *p) {
+		int i = typeValueStack.size();
+		p->listsettypeelem_->accept(this);
+		int e = typeValueStack.size();
+		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		for(; i < e; i++) {
+			values.insert(typeValueStack.top());
+			typeValueStack.pop();
+		}
+		auto set = sys->makeSet(values);
+		typeStack.push(sys->makeVector(set,set));
+	}
 
 	void TypeChecker::visitEInt(EInt *p) {
 		typeStack.push(sys->makeRange(p->integer_,p->integer_));
@@ -956,6 +978,7 @@ namespace shimmr {
 		for(auto it = p->listexp_->rbegin(); it != p->listexp_->rend(); ++it)  {
 			checkCollection(p->line_number,t);
 			auto type = visitForType(*it);
+			follow(type);
 
 			checkSOE(p->line_number,
 				t->indexType(),

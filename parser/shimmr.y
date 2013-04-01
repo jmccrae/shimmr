@@ -360,6 +360,8 @@ Exp6 : _SYMB_17 Exp7 {  $$ = new ENot($2); $$->line_number = yy_mylinenumber; YY
 Exp7 : _IDENT_ {  $$ = new EIdent($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; } 
   | _IDENT_ _SYMB_18 ListExp _SYMB_19 {  std::reverse($3->begin(),$3->end()) ;$$ = new EVector($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
   | _IDENT_ _SYMB_4 ListExp _SYMB_5 {  std::reverse($3->begin(),$3->end()) ;$$ = new EFuncCall($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _INTEGER_ _SYMB_21 _INTEGER_ {  $$ = new ERange($1, $3); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
+  | _SYMB_0 ListSetTypeElem _SYMB_1 {  std::reverse($2->begin(),$2->end()) ;$$ = new ESet($2); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
   | _INTEGER_ {  $$ = new EInt($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
   | _DOUBLE_ {  $$ = new EFloat($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }
   | _STRING_ {  $$ = new EString($1); $$->line_number = yy_mylinenumber; YY_RESULT_Exp_= $$; }

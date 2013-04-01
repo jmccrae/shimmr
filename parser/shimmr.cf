@@ -40,6 +40,8 @@ EVector. Exp7 ::= Ident "[" [Exp] "]" ;
 EFuncCall. Exp7 ::= Ident "(" [Exp] ")" ;
 ArgumentDef. Argument ::= Type Ident ;
 separator Argument "," ;
+ERange. Exp7 ::= Integer ":" Integer ;
+ESet. Exp7 ::= "{" [SetTypeElem] "}" ;
 EInt. Exp7 ::= Integer ;
 EFloat. Exp7 ::= Double ;
 EString. Exp7 ::= String ;
