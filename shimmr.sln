@@ -8,6 +8,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "parser", "parser\parser.vcxproj", "{E3BD7278-E1B1-463A-99B1-2909DA7CD06A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "logic", "logic\logic.vcxproj", "{06DF872F-9882-471C-9CE5-CE727010234E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E3BD7278-E1B1-463A-99B1-2909DA7CD06A} = {E3BD7278-E1B1-463A-99B1-2909DA7CD06A}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -22,6 +27,10 @@ Global
 		{E3BD7278-E1B1-463A-99B1-2909DA7CD06A}.Debug|Win32.Build.0 = Debug|Win32
 		{E3BD7278-E1B1-463A-99B1-2909DA7CD06A}.Release|Win32.ActiveCfg = Release|Win32
 		{E3BD7278-E1B1-463A-99B1-2909DA7CD06A}.Release|Win32.Build.0 = Release|Win32
+		{06DF872F-9882-471C-9CE5-CE727010234E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{06DF872F-9882-471C-9CE5-CE727010234E}.Debug|Win32.Build.0 = Debug|Win32
+		{06DF872F-9882-471C-9CE5-CE727010234E}.Release|Win32.ActiveCfg = Release|Win32
+		{06DF872F-9882-471C-9CE5-CE727010234E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
