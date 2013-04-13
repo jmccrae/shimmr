@@ -7,4 +7,9 @@ Debug
 *.pdb
 *.bak
 *.opensdf
+.build-debug/
+*.john_mccrae
+*.session
+*~
+*.tags
 

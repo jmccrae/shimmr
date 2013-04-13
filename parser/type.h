@@ -19,7 +19,7 @@ namespace shimmrType {
 	public:
 		~Type(void);
 		virtual const std::string& symbol() const = 0;
-		virtual const std::shared_ptr<Type> or(const std::shared_ptr<Type>) const;
+		virtual const std::shared_ptr<Type> unify(const std::shared_ptr<Type>) const;
 		virtual bool isSuperclassOf(const std::shared_ptr<Type>) const;
 		inline bool isSuperclassOrEqual(const std::shared_ptr<Type> t) const { return isEqual(t) || isSuperclassOf(t); }
 		virtual bool isEqual(const std::shared_ptr<Type>) const;
@@ -92,7 +92,7 @@ namespace shimmrType {
 		friend TypeSystem;
 	private:
 		std::string _symbol;
-		std::vector<const std::shared_ptr<Type>> members;
+		std::vector<std::shared_ptr<Type>> members;
 		UnionType(TypeSystem*,const std::shared_ptr<std::set<std::string>>, const std::shared_ptr<std::set<std::string>>);
 	public:
 		~UnionType();
@@ -119,15 +119,15 @@ namespace shimmrType {
 		friend TypeSystem;
 	private:
 		static const std::string ERR;
-		std::vector<const std::string> messages;
-		ErrorType(TypeSystem*,const std::vector<const std::string>&,const std::vector<const std::string>&);
-		ErrorType(TypeSystem*,const std::vector<const std::string>&);
+		std::vector<std::string> messages;
+		ErrorType(TypeSystem*,const std::vector<std::string>&,const std::vector<std::string>&);
+		ErrorType(TypeSystem*,const std::vector<std::string>&);
 		ErrorType(TypeSystem*,const std::string& msg);
 	public:
 		~ErrorType();
 		virtual const std::string& symbol() const;
 		virtual std::shared_ptr<std::set<std::string>> asUnion() const;
-		virtual const std::shared_ptr<Type> or(const std::shared_ptr<Type>) const;
+		virtual const std::shared_ptr<Type> unify(const std::shared_ptr<Type>) const;
 		virtual bool isSuperclassOf(const std::shared_ptr<Type>) const;
 		virtual bool isEqual(const std::shared_ptr<Type>) const;
 		virtual bool isError() const;
@@ -190,9 +190,9 @@ namespace shimmrType {
 		friend TypeSystem;
 	private:
 		std::string _symbol;
-		SetType(TypeSystem*,const std::set<const std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
+		SetType(TypeSystem*,const std::set<std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
 	public:
-		const std::set<const std::shared_ptr<TypeValue>, decltype(compareTypeValue)*> values;
+		const std::set<std::shared_ptr<TypeValue>, decltype(compareTypeValue)*> values;
 		~SetType();
 		virtual const std::string& symbol() const;
 		virtual bool isSuperclassOf(const std::shared_ptr<Type>) const;
@@ -250,7 +250,7 @@ namespace shimmrType {
 		const std::shared_ptr<Type> Anything;
 		const std::shared_ptr<Type> makeUnion(const std::shared_ptr<std::set<std::string>>, const std::shared_ptr<std::set<std::string>>);
 		const std::shared_ptr<Type> makeError(const int, const std::string&);
-		const std::shared_ptr<Type> makeSet(const std::set<const std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
+		const std::shared_ptr<Type> makeSet(const std::set<std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
 		const std::shared_ptr<Type> makeRange(const int,const int);
 		const std::shared_ptr<Type> makeVector(const std::shared_ptr<Type>, const std::shared_ptr<Type>);
 		const std::shared_ptr<Type> makeFunction(const std::shared_ptr<Type>, const std::vector<std::shared_ptr<Type>>&);

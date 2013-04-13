@@ -1,0 +1,1 @@
+./Debug/Test.o ./Debug/Printer.o ./Debug/scope.o ./Debug/type.o ./Debug/Skeleton.o ./Debug/Test.o ./Debug/lexer.o ./Debug/Absyn.o ./Debug/parser.o ./Debug/scope_inferrer.o ./Debug/type_checker.o

@@ -400,7 +400,7 @@ namespace shimmr {
 		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
 		int e = typeValueStack.size();
-		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 		for(; i < e; i++) {
 			values.insert(typeValueStack.top());
 			typeValueStack.pop();

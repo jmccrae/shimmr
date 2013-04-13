@@ -1,0 +1,1 @@
+Debug/scoper.o Debug/tests.o Debug/test_checker.o Debug/type_axioms.o

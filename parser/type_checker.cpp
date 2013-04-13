@@ -2,6 +2,8 @@
 
 #include <sstream>
 #include <assert.h>
+#include <algorithm>
+#include <limits.h>
 
 using namespace std;
 
@@ -71,7 +73,7 @@ namespace shimmr {
 	void TypeChecker::follow(shared_ptr<shimmrType::Type> t) {
 		if(typeStack.top()->isError()) {
 			if(t->isError()) {
-				auto newErr = typeStack.top()->or(t);
+				auto newErr = typeStack.top()->unify(t);
 				typeStack.pop();
 				typeStack.push(newErr);
 			} else {
@@ -256,7 +258,7 @@ namespace shimmr {
 		current = s.get();
 
 		auto statType = visitForType(p->statementblock_);
-		follow(statType->or(sys->Null));
+		follow(statType->unify(sys->Null));
 
 		current = current->parent;
 	}
@@ -277,7 +279,7 @@ namespace shimmr {
 		current = current->parent;
 
 		auto elseType = visitForType(p->elseblock_);
-		follow(statType->or(elseType));
+		follow(statType->unify(elseType));
 
 	}
 
@@ -294,7 +296,7 @@ namespace shimmr {
 		current = s.get();
 
 		auto statType = visitForType(p->statementblock_);
-		follow(statType->or(sys->Null));
+		follow(statType->unify(sys->Null));
 
 		current = current->parent;
 	}
@@ -314,7 +316,7 @@ namespace shimmr {
 		auto statType = visitForType(p->statementblock_);
 		current = current->parent;
 		auto elseType = visitForType(p->elseblock_);
-		follow(statType->or(elseType));
+		follow(statType->unify(elseType));
 
 
 	}
@@ -351,7 +353,7 @@ namespace shimmr {
 		auto statType = visitForType(p->statementblock_);
 		follow(statType);
 		
-		follow(expType->contentType()->or(sys->Null));
+		follow(expType->contentType()->unify(sys->Null));
 
 		current = current->parent;
 	}
@@ -376,7 +378,7 @@ namespace shimmr {
 		auto elseType = visitForType(p->elseblock_);
 		follow(elseType);
 
-		follow(expType->contentType()->or(elseType));
+		follow(expType->contentType()->unify(elseType));
 
 		current = current->parent;
 
@@ -394,7 +396,7 @@ namespace shimmr {
 		
 		auto type1 = visitForType(p->exp_1);
 
-		follow(type1->or(sys->Null));
+		follow(type1->unify(sys->Null));
 	}
 
 	void TypeChecker::visitExpAsStatement(ExpAsStatement *p) {
@@ -561,7 +563,7 @@ namespace shimmr {
 		function<double (double,double)> dTransform) {
 
 		if(t1->isError() && t2->isError()) {
-			return t1->or(t2);
+			return t1->unify(t2);
 		} else if(t1->isError()) {
 			return t1;
 		} else if(t2->isError()) {
@@ -594,7 +596,7 @@ namespace shimmr {
 			} else if(t2->isSet()) {
 				auto _t1 = (shimmrType::RangeType*)t1.get();
 				auto _t2 = (shimmrType::SetType*)t2.get();
-				std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 				for(auto it = _t2->values.begin(); it != _t2->values.end(); ++it) {
 					for(int i = _t1->lb; i <= _t1->ub; i++) {
 						if((*it)->type() == shimmrType::tvtFloat) {
@@ -616,7 +618,7 @@ namespace shimmr {
 			if(t2->isRange()) {
 				auto _t1 = (shimmrType::SetType*)t1.get();
 				auto _t2 = (shimmrType::RangeType*)t2.get();
-				std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 				for(auto it = _t1->values.begin(); it != _t1->values.end(); ++it) {
 					for(int i = _t2->lb; i <= _t2->ub; i++) {
 						if((*it)->type() == shimmrType::tvtFloat) {
@@ -635,7 +637,7 @@ namespace shimmr {
 				
 				auto _t1 = (shimmrType::SetType*)t1.get();
 				auto _t2 = (shimmrType::SetType*)t2.get();
-				std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 				for(auto it1 = _t1->values.begin(); it1 != _t1->values.end(); ++it1) {
 					for(auto it2 = _t2->values.begin(); it2 != _t2->values.end(); ++it2) {
 						if((*it1)->type() == shimmrType::tvtFloat && (*it2)->type() == shimmrType::tvtFloat) {
@@ -855,7 +857,7 @@ namespace shimmr {
 		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
 		int e = typeValueStack.size();
-		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 		for(; i < e; i++) {
 			values.insert(typeValueStack.top());
 			typeValueStack.pop();
@@ -869,13 +871,13 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitEFloat(EFloat *p) {
-		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 		values.insert(make_shared<shimmrType::FloatTypeValue>(p->double_));
 		typeStack.push(sys->makeSet(values));
 	}
 
 	void TypeChecker::visitEString(EString *p) {
-		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 		string val(p->string_);
 		values.insert(make_shared<shimmrType::StringTypeValue>(p->string_));
 		typeStack.push(sys->makeSet(values));
@@ -933,7 +935,7 @@ namespace shimmr {
 		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
 		int e = typeValueStack.size();
-		std::set<const std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 		for(; i < e; i++) {
 			values.insert(typeValueStack.top());
 			typeValueStack.pop();

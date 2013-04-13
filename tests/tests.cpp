@@ -1,12 +1,13 @@
 // tests.cpp : All tests for Shimmr
 //
-#include <UnitTest++.h>
+#include <unittest++/UnitTest++.h>
 #include "../parser/Absyn.H"
 #include "../parser/Parser.H"
 #include "../parser/type.h"
 
 #include <stdio.h>
 #include <memory>
+#include <cstring>
 
 Program *getAST(const char *data) {
 	FILE *stream = tmpfile();

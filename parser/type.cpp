@@ -15,7 +15,7 @@ namespace shimmrType {
 	{
 	}
 	
-	const shared_ptr<Type> Type::or(const shared_ptr<Type> t) const {
+	const shared_ptr<Type> Type::unify(const shared_ptr<Type> t) const {
 		if(t->isError()) {
 			return t;
 		} else {
@@ -262,7 +262,7 @@ namespace shimmrType {
 		return s;
 	}
 	
-	ErrorType::ErrorType(TypeSystem*s,const vector<const string>& s1,const vector<const string>& s2) : Type(s) {
+	ErrorType::ErrorType(TypeSystem*s,const vector<string>& s1,const vector<string>& s2) : Type(s) {
 		for(auto i = s1.begin(); i != s1.end(); ++i) {
 			messages.push_back(*i);
 		}
@@ -271,13 +271,13 @@ namespace shimmrType {
 		}
 	}
 
-	ErrorType::ErrorType(TypeSystem*s,const vector<const string>& s1) : Type(s) {
+	ErrorType::ErrorType(TypeSystem*s,const vector<string>& s1) : Type(s) {
 		for(auto i = s1.begin(); i != s1.end(); ++i) {
 			messages.push_back(*i);
 		}
 	}
 
-	const shared_ptr<Type> ErrorType::or(const shared_ptr<Type> t) const {
+	const shared_ptr<Type> ErrorType::unify(const shared_ptr<Type> t) const {
 		if(t->isError()) {
 			auto et = (ErrorType*)t.get();
 			auto net = new ErrorType(sys,messages,et->messages);
@@ -314,7 +314,7 @@ namespace shimmrType {
 		return s->symbol().compare(t->symbol()) < 0;
 	}
 	
-	SetType::SetType(TypeSystem*s,const set<const shared_ptr<TypeValue>, decltype(compareTypeValue)*>& vs) : Type(s), values(vs) {
+	SetType::SetType(TypeSystem*s,const set<shared_ptr<TypeValue>, decltype(compareTypeValue)*>& vs) : Type(s), values(vs) {
 		if(!vs.empty()) {
 			auto iterator = vs.begin();
 			_symbol.append("{");
@@ -366,7 +366,7 @@ namespace shimmrType {
 
 	shared_ptr<Type> SetType::merge(const shared_ptr<Type> t) const {
 		if(t->isSet()) {
-			set<const shared_ptr<TypeValue>, decltype(compareTypeValue)*> unionValues(compareTypeValue);
+			set<shared_ptr<TypeValue>, decltype(compareTypeValue)*> unionValues(compareTypeValue);
 			auto t2 = (SetType*)t.get();
 			for(auto it = values.begin(); it != values.end(); ++it) {
 				unionValues.insert(*it);
@@ -380,7 +380,7 @@ namespace shimmrType {
 				return t;
 			}
 			auto t2 = (RangeType*)t.get();
-			set<const shared_ptr<TypeValue>, decltype(compareTypeValue)*> unionValues(compareTypeValue);
+			set<shared_ptr<TypeValue>, decltype(compareTypeValue)*> unionValues(compareTypeValue);
 			for(auto it = values.begin(); it != values.end(); ++it) {
 				unionValues.insert(*it);
 			}
@@ -689,7 +689,7 @@ namespace shimmrType {
 		return sp;
 	}
 
-	const shared_ptr<Type> TypeSystem::makeSet(const set<const shared_ptr<TypeValue>, decltype(compareTypeValue)*>& s) {
+	const shared_ptr<Type> TypeSystem::makeSet(const set<shared_ptr<TypeValue>, decltype(compareTypeValue)*>& s) {
 		auto st = new SetType(this,s);
 		const shared_ptr<Type> sp(st);
 		return registerType(sp);
@@ -703,7 +703,7 @@ namespace shimmrType {
 
 	const shared_ptr<Type> TypeSystem::makeVector(const shared_ptr<Type> content, const shared_ptr<Type> index) {
 		if(content->isError() && index->isError()) {
-			return content->or(index);
+			return content->unify(index);
 		} else if(content->isError()) {
 			return content;
 		} else if(index->isError()) {
@@ -719,11 +719,11 @@ namespace shimmrType {
 		shared_ptr<Type> err = Unit;
 		for(auto t : args) {
 			if(t->isError()) {
-				err = err->or(t);
+				err = err->unify(t);
 			}
 		}
 		if(returnType->isError() && err->isError()) {
-			return returnType->or(err);
+			return returnType->unify(err);
 		} else if(returnType->isError()) {
 			return returnType;
 		} else if(err->isError()) {

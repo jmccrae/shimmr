@@ -1,4 +1,4 @@
-#include <UnitTest++.h>
+#include <unittest++/UnitTest++.h>
 #include "../parser/type.h"
 #include "../parser/Parser.H"
 #include "../parser/scope_inferrer.h"
@@ -6,6 +6,7 @@
 #include <iostream>
 #include "tests.h"
 #include "../parser/type_checker.h"
+#include <cstring>
 
 using namespace std;
 using namespace shimmr;
