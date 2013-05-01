@@ -122,7 +122,7 @@ namespace shimmrType {
 		} else if(t->isSet()) {
 			auto t2 = (SetType*)t.get();
 			for(auto it = t2->values.begin(); it != t2->values.end(); ++it) {
-				if((*it)->type() != tvtInt) {
+				if((*it)->litType() != tvtInt) {
 					return false;
 				}
 			}
@@ -139,7 +139,7 @@ namespace shimmrType {
 		if(t->isSet()) {
 			auto t2 = (SetType*)t.get();
 			for(auto it = t2->values.begin(); it != t2->values.end(); ++it) {
-				if((*it)->type() != tvtFloat) {
+				if((*it)->litType() != tvtFloat) {
 					return false;
 				}
 			}
@@ -156,7 +156,7 @@ namespace shimmrType {
 		if(t->isSet()) {
 			auto t2 = (SetType*)t.get();
 			for(auto it = t2->values.begin(); it != t2->values.end(); ++it) {
-				if((*it)->type() != tvtString) {
+				if((*it)->litType() != tvtString) {
 					return false;
 				}
 			}
@@ -340,21 +340,21 @@ namespace shimmrType {
 			return true;
 		} else if(t->symbol().compare("Int")) {
 			for(auto it = values.begin(); it != values.end(); ++it) {
-				if((*it)->type() != tvtInt) {
+				if((*it)->litType() != tvtInt) {
 					return false;
 				}
 			}
 			return true;
 		} else if(t->symbol().compare("Float")) {
 			for(auto it = values.begin(); it != values.end(); ++it) {
-				if((*it)->type() != tvtFloat) {
+				if((*it)->litType() != tvtFloat) {
 					return false;
 				}
 			}
 			return true;
 		} else if(t->symbol().compare("String")) {
 			for(auto it = values.begin(); it != values.end(); ++it) {
-				if((*it)->type() != tvtString) {
+				if((*it)->litType() != tvtString) {
 					return false;
 				}
 			}
@@ -425,7 +425,7 @@ namespace shimmrType {
 			}
 			int found = 0;
 			for(auto it = values.begin(); it != values.end(); ++it) {
-				if((*it)->type() == tvtInt &&
+				if((*it)->litType() == tvtInt &&
 					(*it)->intValue() >= t2->lb &&
 					(*it)->intValue() <= t2->ub) {
 						found++;
@@ -510,7 +510,7 @@ namespace shimmrType {
 		} else if(t->isSet()) {
 			auto t2 = (SetType*)t.get();
 			for(auto it = t2->values.begin(); it != t2->values.end(); ++it) {
-				if((*it)->type() != tvtInt ||
+				if((*it)->litType() != tvtInt ||
 					(*it)->intValue() < lb ||
 					(*it)->intValue() > ub) {
 						return false;
@@ -558,7 +558,11 @@ namespace shimmrType {
 		return sym;
 	}
 
-	const TypeValueType StringTypeValue::type() const {
+	const shared_ptr<Type> StringTypeValue::type(const shared_ptr<TypeSystem> sys) const {
+		return sys->String;
+	}
+	
+	const LiteralType StringTypeValue::litType() const {
 		return tvtString;
 	}
 
@@ -576,7 +580,11 @@ namespace shimmrType {
 		return sym;
 	}
 
-	const TypeValueType IntTypeValue::type() const {
+	const shared_ptr<Type> IntTypeValue::type(shared_ptr<TypeSystem> sys) const {
+		return sys->makeRange(val,val);
+	}
+	
+	const LiteralType IntTypeValue::litType() const {
 		return tvtInt;
 	}
 
@@ -594,12 +602,39 @@ namespace shimmrType {
 		return sym;
 	}
 
-	const TypeValueType FloatTypeValue::type() const {
-		return tvtFloat;
+	const shared_ptr<Type> FloatTypeValue::type(shared_ptr<TypeSystem> sys) const {
+		TypeValueSet tvs(compareTypeValue);
+		tvs.insert(make_shared<FloatTypeValue>(val));
+		return sys->makeSet(tvs);
 	}
 
+	const LiteralType FloatTypeValue::litType() const {
+		return tvtFloat;
+	}
+	
 	const double FloatTypeValue::floatValue() const {
 		return val;
+	}
+	
+	UnitTypeValue::UnitTypeValue() {
+		
+	}
+	
+	UnitTypeValue::~UnitTypeValue() {
+		
+	}
+	
+	const string& UnitTypeValue::symbol() const {
+		static string name = "unit";
+		return name;
+	}
+	
+	const shared_ptr<Type> UnitTypeValue::type(shared_ptr<TypeSystem> sys) const {
+		return sys->Unit;
+	}
+	
+	const LiteralType UnitTypeValue::litType() const {
+		return tvtSpecial;
 	}
 
 	FunctionType::FunctionType(TypeSystem* s,const std::shared_ptr<Type> r,const std::vector<std::shared_ptr<Type>>& a) :

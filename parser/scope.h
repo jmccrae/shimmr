@@ -50,6 +50,7 @@ namespace shimmr {
 	private:
 		std::set<std::string> activeValues;
 		Scope(Scope *p);
+		int id;
 	public:
 		std::shared_ptr<shimmrType::TypeSystem> typeSystem;
 		Scope *parent;
@@ -57,6 +58,7 @@ namespace shimmr {
 		std::map<Visitable*,std::shared_ptr<Scope>> children;
 		std::shared_ptr<Scope> makeChildScope(Visitable*);
 		std::shared_ptr<ScopeElement> resolve(const std::string& name);
+		std::string resolveName(const std::string& name);
 		void assign(std::shared_ptr<ScopeElement> elem, const std::string& name);
 		static std::shared_ptr<Scope> root();
 		virtual bool isScopeValid();

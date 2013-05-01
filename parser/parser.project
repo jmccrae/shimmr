@@ -29,6 +29,7 @@
     <File Name="Skeleton.H"/>
     <File Name="scope_inferrer.cpp"/>
     <File Name="type_checker.cpp"/>
+    <File Name="shimmr.cf"/>
   </VirtualDirectory>
   <Settings Type="Static Library">
     <GlobalSettings>

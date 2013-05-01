@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="shimmr" Database="./shimmr.tags">
   <Project Name="parser" Path="parser/parser.project" Active="No"/>
-  <Project Name="tests" Path="tests/tests.project" Active="Yes"/>
+  <Project Name="tests" Path="tests/tests.project" Active="No"/>
+  <Project Name="logic" Path="logic/logic.project" Active="Yes"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Project Name="parser" ConfigName="Debug"/>
       <Project Name="tests" ConfigName="Debug"/>
+      <Project Name="logic" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Project Name="parser" ConfigName="Release"/>
       <Project Name="tests" ConfigName="Release"/>
+      <Project Name="logic" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

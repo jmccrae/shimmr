@@ -135,14 +135,13 @@ namespace shimmrType {
 		virtual std::shared_ptr<Type> indexType() const;
 	};
 
-	enum TypeValueType { tvtString, tvtInt, tvtFloat };
-
-	
+	enum LiteralType { tvtInt, tvtFloat, tvtString, tvtSpecial };
 
 	class TypeValue {
 	public:
 		virtual const std::string& symbol() const = 0;
-		virtual const TypeValueType type() const = 0;
+		virtual const std::shared_ptr<Type> type(std::shared_ptr<TypeSystem>) const = 0;
+		virtual const LiteralType litType() const = 0;
 		virtual const std::string& stringValue() const;
 		virtual const int intValue() const;
 		virtual const double floatValue() const;
@@ -156,8 +155,9 @@ namespace shimmrType {
 		StringTypeValue(const std::string&);
 		~StringTypeValue();
 		virtual const std::string& symbol() const;
-		virtual const TypeValueType type() const;
+		virtual const std::shared_ptr<Type> type(std::shared_ptr<TypeSystem>) const;
 		virtual const std::string& stringValue() const;
+		virtual const LiteralType litType() const;
 	};
 
 	class IntTypeValue : public TypeValue {
@@ -168,8 +168,9 @@ namespace shimmrType {
 		IntTypeValue(const int);
 		~IntTypeValue();
 		virtual const std::string& symbol() const;
-		virtual const TypeValueType type() const;
+		virtual const std::shared_ptr<Type> type(std::shared_ptr<TypeSystem>) const;
 		virtual const int intValue() const;
+		virtual const LiteralType litType() const;
 	};
 
 	class FloatTypeValue : public TypeValue {
@@ -180,17 +181,29 @@ namespace shimmrType {
 		FloatTypeValue(const double);
 		~FloatTypeValue();
 		virtual const std::string& symbol() const;
-		virtual const TypeValueType type() const;
+		virtual const std::shared_ptr<Type> type(std::shared_ptr<TypeSystem>) const;
 		virtual const double floatValue() const;
+		virtual const LiteralType litType() const;
+	};
+	
+	class UnitTypeValue : public TypeValue {
+	public:
+		UnitTypeValue();
+		~UnitTypeValue();
+		virtual const std::string&symbol() const;
+		virtual const std::shared_ptr<Type> type(std::shared_ptr<TypeSystem>) const;
+		virtual const LiteralType litType() const;
 	};
 
 	bool compareTypeValue(const std::shared_ptr<TypeValue> &s, const std::shared_ptr<TypeValue>&t);
+
+	typedef std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> TypeValueSet;
 
 	class SetType : public Type {
 		friend TypeSystem;
 	private:
 		std::string _symbol;
-		SetType(TypeSystem*,const std::set<std::shared_ptr<TypeValue>, decltype(compareTypeValue)*>&);
+		SetType(TypeSystem*,const TypeValueSet&);
 	public:
 		const std::set<std::shared_ptr<TypeValue>, decltype(compareTypeValue)*> values;
 		~SetType();

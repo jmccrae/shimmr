@@ -1,14 +1,18 @@
 #include "scope.h"
 
+#include <sstream>
+
 using namespace std;
 
 namespace shimmr {
 	Scope::Scope(Scope *p) : parent(p) {
+		static int scope_counter = 0;
 		if(p) {
 			typeSystem = p->typeSystem;
 		} else {
 			typeSystem = make_shared<shimmrType::TypeSystem>();
 		}
+		id = scope_counter;
 	}
 
 	std::shared_ptr<Scope> Scope::makeChildScope(Visitable *v) {
@@ -27,6 +31,19 @@ namespace shimmr {
 			p = p->parent;
 		}
 		return std::make_shared<UndefinedScopeElement>(this,name);
+	}
+	
+	string Scope::resolveName(const std::string& name) {
+		Scope *p = this;
+		while(p) {
+			if(p->scopeElements.find(name) != p->scopeElements.end()) {
+				stringstream n;
+				n << name << "@" << p->id;
+				return n.str();
+			}
+			p = p->parent;
+		}
+		return "ERR_UNDEF";
 	}
 
 	void Scope::assign(std::shared_ptr<ScopeElement> elem, const std::string& name) {

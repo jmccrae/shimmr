@@ -599,10 +599,10 @@ namespace shimmr {
 				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 				for(auto it = _t2->values.begin(); it != _t2->values.end(); ++it) {
 					for(int i = _t1->lb; i <= _t1->ub; i++) {
-						if((*it)->type() == shimmrType::tvtFloat) {
+						if((*it)->litType() == shimmrType::tvtFloat) {
 							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform(i,(*it)->floatValue()));
 							values.insert(v);
-						} else if((*it)->type() == shimmrType::tvtInt) {
+						} else if((*it)->litType() == shimmrType::tvtInt) {
 							auto v = make_shared<shimmrType::IntTypeValue>(iTransform(i,(*it)->intValue()));
 							values.insert(v);
 						} else {
@@ -621,10 +621,10 @@ namespace shimmr {
 				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 				for(auto it = _t1->values.begin(); it != _t1->values.end(); ++it) {
 					for(int i = _t2->lb; i <= _t2->ub; i++) {
-						if((*it)->type() == shimmrType::tvtFloat) {
+						if((*it)->litType() == shimmrType::tvtFloat) {
 							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it)->floatValue(),i));
 							values.insert(v);
-						} else if((*it)->type() == shimmrType::tvtInt) {
+						} else if((*it)->litType() == shimmrType::tvtInt) {
 							auto v = make_shared<shimmrType::IntTypeValue>(iTransform((*it)->intValue(),i));
 							values.insert(v);
 						} else {
@@ -640,16 +640,16 @@ namespace shimmr {
 				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
 				for(auto it1 = _t1->values.begin(); it1 != _t1->values.end(); ++it1) {
 					for(auto it2 = _t2->values.begin(); it2 != _t2->values.end(); ++it2) {
-						if((*it1)->type() == shimmrType::tvtFloat && (*it2)->type() == shimmrType::tvtFloat) {
+						if((*it1)->litType() == shimmrType::tvtFloat && (*it2)->litType() == shimmrType::tvtFloat) {
 							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->floatValue()));
 							values.insert(v);
-						} else if((*it1)->type() == shimmrType::tvtFloat && (*it2)->type() == shimmrType::tvtInt) {
+						} else if((*it1)->litType() == shimmrType::tvtFloat && (*it2)->litType() == shimmrType::tvtInt) {
 							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->intValue()));
 							values.insert(v);
-						} else if((*it1)->type() == shimmrType::tvtInt && (*it2)->type() == shimmrType::tvtFloat) {
+						} else if((*it1)->litType() == shimmrType::tvtInt && (*it2)->litType() == shimmrType::tvtFloat) {
 							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->intValue(),(*it2)->floatValue()));
 							values.insert(v);
-						} else if((*it1)->type() == shimmrType::tvtInt && (*it2)->type() == shimmrType::tvtInt) {
+						} else if((*it1)->litType() == shimmrType::tvtInt && (*it2)->litType() == shimmrType::tvtInt) {
 							auto v = make_shared<shimmrType::FloatTypeValue>(iTransform((*it1)->intValue(),(*it2)->intValue()));
 							values.insert(v);
 						} else {

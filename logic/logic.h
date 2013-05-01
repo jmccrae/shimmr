@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../parser/type.h"
+#include "../parser/scope.h"
 
 namespace shimmrLogic {
 
@@ -12,15 +13,24 @@ namespace shimmrLogic {
 		virtual std::shared_ptr<shimmrType::Type> type() const = 0;
 	};
 
-	class StringValue : public Value {
+	class LiteralValue : public Value {
 	private:
-		const std::string _value;
-		std::shared_ptr<shimmrType::Type> _type;
+		const std::shared_ptr<shimmrType::TypeValue> _value;
 	public:
-		StringValue(std::shared_ptr<shimmrType::TypeSystem>,std::string&);
+		LiteralValue(std::shared_ptr<shimmrType::TypeSystem>,std::shared_ptr<shimmrType::TypeValue>);
 		virtual std::shared_ptr<shimmrType::Type> type() const;
 	};
-
+	
+	class VariableValue : public Value {
+	private:
+		std::shared_ptr<shimmr::Scope> _scope;
+		const std::string _id;
+	public:
+		VariableValue(std::shared_ptr<shimmrType::TypeSystem>,std::shared_ptr<shimmr::Scope>, const std::string&);
+		virtual std::shared_ptr<shimmrType::Type> type() const;
+	};
+	
+	
 	class Predicate {
 	private:
 		const std::string _id;
@@ -34,9 +44,13 @@ namespace shimmrLogic {
 	private:
 		std::vector<std::shared_ptr<Predicate>> _premises;
 		std::vector<std::shared_ptr<Predicate>> _consequences;
+		const bool exclusive;
 	public:
-		Clause(std::vector<std::shared_ptr<Predicate>>&,std::vector<std::shared_ptr<Predicate>>&);
+		Clause(std::vector<std::shared_ptr<Predicate>>&,std::vector<std::shared_ptr<Predicate>>&, bool exclusive);
 		~Clause();
+		bool isExclusive();
+		std::vector<std::shared_ptr<Predicate>>& premises();
+		std::vector<std::shared_ptr<Predicate>>& consequences();
 	};
 
 }
