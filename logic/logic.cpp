@@ -16,12 +16,12 @@ namespace shimmrLogic {
 		return _value->type(sys);
 	}
 	
-	VariableValue::VariableValue(shared_ptr<shimmrType::TypeSystem> s, shared_ptr<shimmr::Scope> sc, const string& id) : Value(s),_scope(sc),_id(id) {
+	VariableValue::VariableValue(shared_ptr<shimmrType::TypeSystem> s, shared_ptr<shimmrType::Type> t, const string& id) : Value(s),_type(t),_id(id) {
 		
 	}
 	
 	shared_ptr<shimmrType::Type> VariableValue::type() const {
-		return _scope->resolve(_id)->type();
+		return _type;
 	}
 
 	Predicate::Predicate(string& s, vector<shared_ptr<Value>>& v) : _id(s), _values(v) {

@@ -1,4 +1,4 @@
-#include <unittest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include "../parser/type.h"
 #include "../parser/Parser.H"
 #include "../parser/scope_inferrer.h"

@@ -240,7 +240,9 @@ namespace shimmr {
 		auto resultType = visitForType(p->statementblock_);
 		follow(resultType);
 
-		follow(sys->makeVector(resultType,expType->indexType()));
+		auto t = sys->makeVector(resultType,expType->indexType());
+		follow(t);
+		expressionTypes[p] = t;
 
 		current = current->parent;
 	}
@@ -258,7 +260,9 @@ namespace shimmr {
 		current = s.get();
 
 		auto statType = visitForType(p->statementblock_);
-		follow(statType->unify(sys->Null));
+		auto t = statType->unify(sys->Null);
+		follow(t);
+		expressionTypes[p] = t;
 
 		current = current->parent;
 	}

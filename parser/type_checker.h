@@ -3,6 +3,7 @@
 #include "scope.h"
 #include <stack>
 #include <functional>
+#include <map>
 
 namespace shimmr {
 
@@ -18,6 +19,7 @@ namespace shimmr {
 		TypeChecker(std::shared_ptr<Scope>);
 		~TypeChecker();
 		static std::shared_ptr<shimmrType::Type> check(Program *p, std::shared_ptr<Scope> scope);
+		std::map<Visitable*,std::shared_ptr<shimmrType::Type>> expressionTypes;
 
 		virtual void visitStatements(Statements *p);
 		virtual void visitStatementBlockStat(StatementBlockStat *p);

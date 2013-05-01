@@ -23,10 +23,10 @@ namespace shimmrLogic {
 	
 	class VariableValue : public Value {
 	private:
-		std::shared_ptr<shimmr::Scope> _scope;
+		const std::shared_ptr<shimmrType::Type> _type;
 		const std::string _id;
 	public:
-		VariableValue(std::shared_ptr<shimmrType::TypeSystem>,std::shared_ptr<shimmr::Scope>, const std::string&);
+		VariableValue(std::shared_ptr<shimmrType::TypeSystem>,std::shared_ptr<shimmrType::Type>, const std::string&);
 		virtual std::shared_ptr<shimmrType::Type> type() const;
 	};
 	

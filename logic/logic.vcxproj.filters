@@ -21,9 +21,15 @@
     <ClInclude Include="logic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="logic_processor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="logic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_processor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

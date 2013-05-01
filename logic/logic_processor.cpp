@@ -1,12 +1,19 @@
 #include "logic_processor.h"
 
+#include <sstream>
+
 using namespace std;
+
+// TODO: Scoping
 
 namespace shimmrLogic
 {
 
-LogicProcessor::LogicProcessor()
+LogicProcessor::LogicProcessor(std::shared_ptr<shimmrType::TypeSystem> s,std::shared_ptr<shimmr::Scope> t, std::map<Visitable*,std::shared_ptr<shimmrType::Type>>& et) :
+	sys(s), topScope(t), expressionTypes(et)
 {
+	unit = make_shared<LiteralValue>(s,make_shared<shimmrType::UnitTypeValue>());
+	anonCounter = 1;
 }
 
 LogicProcessor::~LogicProcessor()
@@ -14,19 +21,61 @@ LogicProcessor::~LogicProcessor()
 }
 
 
-std::shared_ptr<Value> LogicProcessor::visitForValue(Visitable *p, int flags) {
+string LogicProcessor::IN("@in");
+string LogicProcessor::IDX("@idx");
+string LogicProcessor::SOME("@some");
+string LogicProcessor::NONE("@none");
+
+shared_ptr<Value> LogicProcessor::visitForValue(Visitable *p) {
 	p->accept(this);
 	auto v = valueStack.top();
 	valueStack.pop();
 	return v;
 }
 
-void LogicProcessor::emitClause(shared_ptr<Predicate> values) {
+shared_ptr<Predicate> LogicProcessor::visitForPredicate(Visitable *p) {
+	p->accept(this);
+	auto p2 = predicateStack.top();
+	predicateStack.pop();
+	return p2;
+}
+
+pair<shared_ptr<Value>,shared_ptr<Predicate>> LogicProcessor::visit(Visitable *p) {
+	p->accept(this);
+	auto v = valueStack.top();
+	auto pr = predicateStack.top();
+	valueStack.pop();
+	predicateStack.pop();
+	return make_pair(v,pr);
+}
+
+
+void LogicProcessor::emitClause(vector<shared_ptr<Predicate>>& values) {
 	
 }
 
-void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, shared_ptr<Predicate> values) {
+void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, vector<shared_ptr<Predicate>>& values) {
 	
+}
+
+vector<shared_ptr<Predicate>> LogicProcessor::singlePredicate(shared_ptr<Predicate> p) {
+	vector<shared_ptr<Predicate>> v;
+	v.push_back(p);
+	return v;
+}
+
+void LogicProcessor::returnValue(shared_ptr<Value> v) {
+	valueStack.push(v);
+}
+
+void LogicProcessor::returnPredicate(shared_ptr<Predicate> p) {
+	predicateStack.push(p);
+}
+
+shared_ptr<Value> LogicProcessor::anonVariable(shared_ptr<shimmrType::Type> t) {
+	stringstream ss;
+	ss << "?" << anonCounter++;
+	return make_shared<VariableValue>(sys,t,ss.str());
 }
 
  void LogicProcessor::visitStatements(Statements *p) {
@@ -34,7 +83,10 @@ void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, shared_ptr<Pre
  }
  
  void LogicProcessor::visitStatementBlockStat(StatementBlockStat *p){
+	 shared_ptr<shimmr::Scope> child = scope()->children.find(p)->second;
+	 scopeStack.push(child);
 	 p->liststatement_->accept(this);
+	 scopeStack.pop();
  }
  
  void LogicProcessor::visitListStatement(ListStatement *p){
@@ -48,14 +100,15 @@ void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, shared_ptr<Pre
  }
  
  void LogicProcessor::visitSimpleDecl(SimpleDecl *p){
-	 vector<shared_ptr<Value>> values;
-	 values.push_back(make_shared<VariableValue>(sys,scope,p->ident_));
-	 values.push_back(visitForValue(p->exp_));
-	 string eq("=");
-	 auto pred = make_shared<Predicate>(eq,values);
-	 vector<shared_ptr<Predicate>> c;
-	 c.push_back(pred);
-	 clauseStack.push(make_shared<Clause>(context,c,false));
+	 // p->exp_
+	 auto expValue = visitForValue(p->exp_);
+	 vector<shared_ptr<Value>> expValueVector;
+	 expValueVector.push_back(expValue);
+	 // p->ident_ = valueOf(p->exp_)
+	 string resolvedName = scope()->resolveName(p->ident_);
+	 auto predicate = make_shared<Predicate>(resolvedName,expValueVector);
+	 emitClause(singlePredicate(predicate));
+	 returnValue(unit);
  }
  
  void LogicProcessor::visitTypedDecl(TypedDecl *p){
@@ -65,75 +118,202 @@ void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, shared_ptr<Pre
 	 vector<shared_ptr<Value>> expValueVector;
 	 expValueVector.push_back(expValue);
 	 // p->ident_ = valueOf(p->exp_)
-	 string resolvedName = scope->resolveName(p->ident_);
+	 string resolvedName = scope()->resolveName(p->ident_);
 	 auto predicate = make_shared<Predicate>(resolvedName,expValueVector);
-	 emitClause(predicate);
+	 emitClause(singlePredicate(predicate));
+	 returnValue(unit);
  }
  
  void LogicProcessor::visitSimpleDeclWith(SimpleDeclWith *p){
 	 // p->exp_1
 	 auto expValue = visitForValue(p->exp_1);
 	 vector<shared_ptr<Value>> expValueVector;
-	 expValueVector.push_back(p->exp_1);
+	 expValueVector.push_back(expValue);
 	 // p->exp_2
 	 auto weightValue = visitForValue(p->exp_2);
 	 // p->ident_ = valueOf(p->exp_1) : p->exp_2
-	 string resolveName = scope->resolveName(p->ident_);
+	 string resolvedName = scope()->resolveName(p->ident_);
 	 auto predicate = make_shared<Predicate>(resolvedName,expValueVector);
-	 emitWeightedClause(weightValue,predicate);
+	 emitWeightedClause(weightValue,singlePredicate(predicate));
+	 returnValue(unit);
 }
  
  void LogicProcessor::visitTypedDeclWith(TypedDeclWith *p){
 	 // p->exp_1
 	 auto expValue = visitForValue(p->exp_1);
 	 vector<shared_ptr<Value>> expValueVector;
-	 expValueVector.push_back(p->exp_1);
+	 expValueVector.push_back(expValue);
 	 // p->exp_2
 	 auto weightValue = visitForValue(p->exp_2);
 	 // p->ident_ = valueOf(p->exp_1) : p->exp_2
-	 string resolveName = scope->resolveName(p->ident_);
+	 string resolvedName = scope()->resolveName(p->ident_);
 	 auto predicate = make_shared<Predicate>(resolvedName,expValueVector);
-	 emitWeightedClause(weightValue,predicate);
+	 emitWeightedClause(weightValue,singlePredicate(predicate));
+	 returnValue(unit);
  }
  
  void LogicProcessor::visitBareDecl(BareDecl *p){
 	 // Type for p->ident_ == p->type_
 	 // No clauses
+	 valueStack.push(make_shared<LiteralValue>(sys,make_shared<shimmrType::UnitTypeValue>()));
  }
  
  void LogicProcessor::visitEFuncDecl(EFuncDecl *p){
-	 // p(args...) == valueOf(p->statementblock_)
-	 // p->statementblock_
+	 // Firstly create the predicate corresponding to calling this elemetn
+	 auto name = scope()->resolveName(p->ident_);
+	 vector<shared_ptr<Value>> argValues;
+	 for(auto argument : *p->listargument_) {
+		 argument->accept(this);
+		 auto value = argumentNames[0];
+		 argValues.push_back(make_shared<VariableValue>(sys,scope()->resolve(value)->type(),value));
+		 argumentNames.clear();
+	 }
+	 auto predicate = make_shared<Predicate>(name,argValues);
+	 // Add this predicate to the LHS of all rules descendent from this point
+	 context.push_back(predicate);
+	 // Enter child scope and visit statement block
+	 auto child = scope()->children.find(p)->second;
+	 scopeStack.push(child);
+	 auto expValue = visitForValue(p->statementblock_);
+	 scopeStack.pop();
+	 // Create return value predicate
+	 string returnName("!" + name);
+	 vector<shared_ptr<Value>> returnArgValues;
+	 returnArgValues.push_back(expValue);
+	 auto retPredicate = make_shared<Predicate>(returnName,returnArgValues);
+	 // Emit return value predicate
+	 emitClause(singlePredicate(retPredicate));
+	 // Remove this as condition from LHS
+	 context.pop_back();
+
+	 returnValue(unit);
  }
  
  void LogicProcessor::visitEFuncDeclWithType(EFuncDeclWithType *p){
-	 // Type of p(args...) == p->type_
-	 // p(args...) == valueOf(p->statementblock_)
-	 // p->statementblock_
+	 // Firstly create the predicate corresponding to calling this elemetn
+	 auto name = scope()->resolveName(p->ident_);
+	 vector<shared_ptr<Value>> argValues;
+	 for(auto argument : *p->listargument_) {
+		 argument->accept(this);
+		 auto value = argumentNames[0];
+		 argValues.push_back(make_shared<VariableValue>(sys,scope()->resolve(value)->type(),value));
+		 argumentNames.clear();
+	 }
+	 auto predicate = make_shared<Predicate>(name,argValues);
+	 // Add this predicate to the LHS of all rules descendent from this point
+	 context.push_back(predicate);
+	 // Enter child scope and visit statement block
+	 auto child = scope()->children.find(p)->second;
+	 scopeStack.push(child);
+	 auto expValue = visitForValue(p->statementblock_);
+	 scopeStack.pop();
+	 // Create return value predicate
+	 string returnName("!" + name);
+	 vector<shared_ptr<Value>> returnArgValues;
+	 returnArgValues.push_back(expValue);
+	 auto retPredicate = make_shared<Predicate>(returnName,returnArgValues);
+	 // Emit return value predicate
+	 emitClause(singlePredicate(retPredicate));
+	 // Remove this as condition from LHS
+	 context.pop_back();
+
+	 returnValue(unit);
  }
  
  void LogicProcessor::visitForStatement(ForStatement *p){
 	 // x \in p->exp_ => p->statementblock_
+	 auto setValue = visitForValue(p->exp_);
+	 vector<shared_ptr<Value>> setValues;
+
+	 auto child = scope()->children.find(p)->second;
+	 scopeStack.push(child);
+
+	 auto counterValue = make_shared<VariableValue>(sys,scope()->resolve(p->ident_)->type(),scope()->resolveName(p->ident_));
+	 setValues.push_back(counterValue);
+	 setValues.push_back(setValue);
+	 auto setPredicate = make_shared<Predicate>(IN,setValues);
+	 context.push_back(setPredicate);
+
+	 auto statValue = visitForValue(p->statementblock_);
+
+	 scopeStack.pop();
+
+	 auto anonValue = anonVariable(expressionTypes.find(p)->second);
+
+	 // Rule of form: @in(i,range) -> @idx(anon,i,s)
+	 vector<shared_ptr<Value>> collBuildValues;
+	 collBuildValues.push_back(anonValue);
+	 collBuildValues.push_back(counterValue);
+	 collBuildValues.push_back(statValue);
+	 emitClause(singlePredicate(make_shared<Predicate>(IDX,collBuildValues)));
+
+	 context.pop_back();
+
+	 returnValue(anonValue);
  }
  
  void LogicProcessor::visitIfStatement(IfStatement *p){
-	 // p->exp_ => p->statementblock_
+	 
+	 auto conditionPredicate = visitForPredicate(p);
+	 context.push_back(conditionPredicate);
+
+	 auto child = scope()->children.find(p)->second;
+	 scopeStack.push(child);
+	 
+	 auto expPred = visit(p->statementblock_);
+
+	 scopeStack.pop();
+	 
+	 auto anon = anonVariable(expressionTypes.find(p)->second);
+
+	 // cond -> @some(anon,exp)
+	 vector<shared_ptr<Value>> someValues;
+	 someValues.push_back(anon);
+	 someValues.push_back(expPred.first);
+
+	 emitClause(singlePredicate(make_shared<Predicate>(SOME,someValues)));
+
+	 context.pop_back();
+
+	 // @none(anon) v cond
+	 vector<shared_ptr<Value>> noneValues;
+	 noneValues.push_back(anon);
+
+	 vector<shared_ptr<Predicate>> nonePreds;
+	 nonePreds.push_back(make_shared<Predicate>(NONE,noneValues));
+	 nonePreds.push_back(conditionPredicate);
+
+	 emitClause(nonePreds);
+
+	 returnValue(anon);
  }
  
  void LogicProcessor::visitIfElseStatement(IfElseStatement *p){
 	 // p->exp_ => p->statementblock_ v p->elseblock_
+	 auto conditionPredicate = visitForPredicate(p);
+	 context.push_back(conditionPredicate);
+
+	 auto child = scope()->children.find(p)->second;
+	 scopeStack.push(child);
+
+	 auto expPred = visit(p->statementblock_);
+
+	 // makeChildScope(p)
  }
  
  void LogicProcessor::visitElseIfBlock(ElseIfBlock *p){
 	 // p ^ p->exp_ => p->statementblock_ 
+	 // makeChildScope(p)
  }
  
  void LogicProcessor::visitElseIf2Block(ElseIf2Block *p){
 	 // p ^ p->exp_ => p->statementblock_1 v p->elseblock_
+	 // makeChildScope(p)
  }
  
  void LogicProcessor::visitElseBlockStat(ElseBlockStat *p){
 	 // p => p->statementblock_
+	 // makeChildScope(p)
  }
  
  void LogicProcessor::visitElseFailStat(ElseFailStat *p){
@@ -143,11 +323,13 @@ void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, shared_ptr<Pre
  void LogicProcessor::visitSomeStatement(SomeStatement *p){
 	 // unique(x \in p->exp_)
 	 // x \in p->exp_ => p->statementblock_
+	 // makeChildScope(p)
  }
  
  void LogicProcessor::visitSomeElseStatement(SomeElseStatement *p){
 	 // unique(x \in p->exp_) v p->elseblock_
 	 // x \in p->exp_ => p->statementblock_
+	 // makeChildScope(p)
  }
  
  void LogicProcessor::visitConditionalStatement(ConditionalStatement *p){
@@ -241,7 +423,7 @@ void LogicProcessor::emitWeightedClause(shared_ptr<Value> weight, shared_ptr<Pre
  }
  
  void LogicProcessor::visitArgumentDef(ArgumentDef *p){
-	 // EMPTY
+	 argumentNames.push_back(p->ident_);
  }
  
  void LogicProcessor::visitERange(ERange *p){

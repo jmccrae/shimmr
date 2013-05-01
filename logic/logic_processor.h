@@ -7,26 +7,50 @@
 
 namespace shimmrLogic
 {
-
-constexpr int DO_NOT_EMIT_CLAUSES = 0x1;
+	// Predicates are named as follows:
+	// Value of "x" in scope #n is x@n
+	// Function call "foo" in scope #n is foo@n
+	// Return value of "foo" in scope #n is !foo@n
+	// Built-ins start with @: @in
+	// Anonymous values start with ?: ?1
 	
 class LogicProcessor : public Visitor
 {
 private:
-    std::stack<std::shared_ptr<Clause>> clauseStack;
+	// Predicates being built
 	std::stack<std::shared_ptr<Predicate>> predicateStack;
+	// Values (if required)
 	std::stack<std::shared_ptr<Value>> valueStack;
+	// LHS predicates 
 	std::vector<std::shared_ptr<Predicate>> context;
+	// Argument names (function def only)
+	std::vector<std::string> argumentNames;
+	// The type system
 	std::shared_ptr<shimmrType::TypeSystem> sys;
-	std::shared_ptr<shimmr::Scope> scope;
+	// The top scope
 	std::shared_ptr<shimmr::Scope> topScope;
+	// The calculated expression types
+	std::map<Visitable*,std::shared_ptr<shimmrType::Type>>& expressionTypes;
+	// The stack of scopes
 	std::stack<std::shared_ptr<shimmr::Scope>> scopeStack;
 	// also emit clauses?
-	std::shared_ptr<Value> visitForValue(Visitable *, int flags = 0);
-	void emitClause(std::shared_ptr<Predicate> values);
-	void emitWeightedClause(std::shared_ptr<Value> weight, std::shared_ptr<Predicate> values);
+	std::shared_ptr<Value> visitForValue(Visitable *);
+	std::shared_ptr<Predicate> visitForPredicate(Visitable *);
+	std::pair<std::shared_ptr<Value>,std::shared_ptr<Predicate>> visit(Visitable *);
+	void emitClause(std::vector<std::shared_ptr<Predicate>>& values);
+	void emitWeightedClause(std::shared_ptr<Value> weight, std::vector<std::shared_ptr<Predicate>>& values);
+	inline std::shared_ptr<shimmr::Scope> scope() { return scopeStack.top(); }
+	void returnValue(std::shared_ptr<Value> value);
+	void returnPredicate(std::shared_ptr<Predicate> predicate);
+	std::vector<std::shared_ptr<Predicate>> singlePredicate(std::shared_ptr<Predicate>);
+	std::shared_ptr<Value> unit;
+	int anonCounter;
+	std::shared_ptr<Value> anonVariable(std::shared_ptr<shimmrType::Type> t);
+	// Special names;
+	static std::string IN, IDX, SOME, NONE;
+
 public:
-	LogicProcessor();
+	LogicProcessor(std::shared_ptr<shimmrType::TypeSystem>,std::shared_ptr<shimmr::Scope>,std::map<Visitable*,std::shared_ptr<shimmrType::Type>>&);
 	~LogicProcessor();
 	virtual void visitStatements(Statements *p);
 	virtual void visitStatementBlockStat(StatementBlockStat *p);

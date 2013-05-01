@@ -1,6 +1,6 @@
 // tests.cpp : All tests for Shimmr
 //
-#include <unittest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include "../parser/Absyn.H"
 #include "../parser/Parser.H"
 #include "../parser/type.h"
