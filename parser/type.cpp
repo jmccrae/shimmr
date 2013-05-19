@@ -1,11 +1,21 @@
 #include "type.h"
 
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 
-namespace shimmrType {
+namespace shimmr{
+	namespace type {
 
+#ifdef __CYGWIN__
+            string to_string(int i) {
+                stringstream ss;
+                ss << i;
+                return ss.str();
+            }
+#endif
+            
 	Type::Type(TypeSystem *s) : sys(s)
 	{
 	}
@@ -768,5 +778,6 @@ namespace shimmrType {
 			const shared_ptr<Type> sp(ft);
 			return registerType(sp);
 		}
+	}
 	}
 }

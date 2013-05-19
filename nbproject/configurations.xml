@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="88">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>parser/Absyn.H</itemPath>
+      <itemPath>parser/Parser.H</itemPath>
+      <itemPath>parser/Printer.H</itemPath>
+      <itemPath>parser/Skeleton.H</itemPath>
+      <itemPath>logic/logic.h</itemPath>
+      <itemPath>logic/logic_processor.h</itemPath>
+      <itemPath>parser/scope.h</itemPath>
+      <itemPath>parser/scope_inferrer.h</itemPath>
+      <itemPath>parser/type.h</itemPath>
+      <itemPath>parser/type_checker.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+      <itemPath>parser/shimmr.cf</itemPath>
+      <itemPath>parser/shimmr.l</itemPath>
+      <itemPath>parser/shimmr.y</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>parser/Absyn.cpp</itemPath>
+      <itemPath>parser/Printer.cpp</itemPath>
+      <itemPath>parser/Skeleton.cpp</itemPath>
+      <itemPath>parser/lexer.cpp</itemPath>
+      <itemPath>logic/logic.cpp</itemPath>
+      <itemPath>logic/logic_processor.cpp</itemPath>
+      <itemPath>main.cpp</itemPath>
+      <itemPath>parser/parser.cpp</itemPath>
+      <itemPath>parser/scope.cpp</itemPath>
+      <itemPath>parser/scope_inferrer.cpp</itemPath>
+      <itemPath>parser/type.cpp</itemPath>
+      <itemPath>parser/type_checker.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1" displayName="CppTests" projectFiles="true" kind="TEST">
+        <itemPath>tests/ShimmrTestRunner.cpp</itemPath>
+        <itemPath>tests/scoper.cpp</itemPath>
+        <itemPath>tests/scoper.h</itemPath>
+        <itemPath>tests/test_checker.cpp</itemPath>
+        <itemPath>tests/tests.cpp</itemPath>
+        <itemPath>tests/tests.h</itemPath>
+        <itemPath>tests/type_axioms.cpp</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <commandlineTool>/usr/local/bin/g++</commandlineTool>
+        </ccTool>
+      </compileType>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="logic/logic.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logic/logic.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="logic/logic_processor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logic/logic_processor.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/Absyn.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Absyn.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/Parser.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Printer.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Printer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/Skeleton.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Skeleton.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/lexer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/parser.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/scope.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/scope.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/scope_inferrer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/scope_inferrer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/shimmr.cf" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/shimmr.l" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/shimmr.y" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/type.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/type.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/type_checker.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/type_checker.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/ShimmrTestRunner.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/scoper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/scoper.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/test_checker.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/tests.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/tests.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/type_axioms.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+      </compileType>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="logic/logic.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logic/logic.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="logic/logic_processor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logic/logic_processor.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/Absyn.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Absyn.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/Parser.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Printer.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Printer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/Skeleton.H" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/Skeleton.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/lexer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/parser.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/scope.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/scope.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/scope_inferrer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/scope_inferrer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/shimmr.cf" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/shimmr.l" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/shimmr.y" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/type.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/type.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="parser/type_checker.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="parser/type_checker.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/ShimmrTestRunner.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/scoper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/scoper.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/test_checker.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/tests.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/tests.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/type_axioms.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>

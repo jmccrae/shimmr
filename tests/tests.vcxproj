@@ -52,14 +52,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../../UnitTest++/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\jmccrae\Documents\Visual Studio 2012\cppunit-1.12.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>../Debug/parser.lib;../../../UnitTest++/Debug/UnitTest++.vsnet2005.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../Debug/parser.lib;../../Visual Studio 2012/cppunit-1.12.1/src/cppunit/Debug/cppunitd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -84,12 +84,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="scoper.cpp" />
+    <ClCompile Include="ShimmrTestRunner.cpp" />
     <ClCompile Include="tests.cpp" />
     <ClCompile Include="test_checker.cpp" />
     <ClCompile Include="type_axioms.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scoper.h" />
     <ClInclude Include="tests.h" />
+    <ClInclude Include="test_checker.h" />
+    <ClInclude Include="type_axioms.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

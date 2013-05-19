@@ -6,7 +6,8 @@
 #include <map>
 #include <vector>
 
-namespace shimmrType {
+namespace shimmr {
+	namespace type {
 
 	class TypeSystem;
 	class TypeValue;
@@ -197,7 +198,7 @@ namespace shimmrType {
 
 	bool compareTypeValue(const std::shared_ptr<TypeValue> &s, const std::shared_ptr<TypeValue>&t);
 
-	typedef std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> TypeValueSet;
+	typedef std::set<std::shared_ptr<TypeValue>, decltype(compareTypeValue)*> TypeValueSet;
 
 	class SetType : public Type {
 		friend TypeSystem;
@@ -268,7 +269,7 @@ namespace shimmrType {
 		const std::shared_ptr<Type> makeVector(const std::shared_ptr<Type>, const std::shared_ptr<Type>);
 		const std::shared_ptr<Type> makeFunction(const std::shared_ptr<Type>, const std::vector<std::shared_ptr<Type>>&);
 	};
-
+	}
 }
 
 

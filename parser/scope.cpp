@@ -9,8 +9,10 @@ namespace shimmr {
 		static int scope_counter = 0;
 		if(p) {
 			typeSystem = p->typeSystem;
+			fSpecifiers.insert(p->fSpecifiers.begin(),p->fSpecifiers.end());
+			lSpecifiers.insert(p->lSpecifiers.begin(),p->lSpecifiers.end());
 		} else {
-			typeSystem = make_shared<shimmrType::TypeSystem>();
+			typeSystem = make_shared<shimmr::type::TypeSystem>();
 		}
 		id = scope_counter;
 	}
@@ -98,17 +100,41 @@ namespace shimmr {
 		return true;
 	}
 
-	ScopeElement::ScopeElement(Scope *s, shared_ptr<shimmrType::Type> t, Visitable *v) : scope(s), _type(t), declarationPoint(v) {
+	void Scope::addFunctionArg(const string& name) {
+		fSpecifiers.insert(name);
+	}
+
+	void Scope::addIteratorArg(const string& name) {
+		lSpecifiers.insert(name);
+	}
+
+	set<string>& Scope::functionArgs() {
+		return fSpecifiers;
+	}
+
+	set<string>& ScopeElement::functionArgs() {
+		return scope->functionArgs();
+	}
+
+	set<string>& Scope::iteratorArgs() {
+		return lSpecifiers;
+	}
+
+	set<string>& ScopeElement::iteratorArgs() {
+		return scope->iteratorArgs();
+	}
+
+	ScopeElement::ScopeElement(Scope *s, shared_ptr<shimmr::type::Type> t, Visitable *v) : scope(s), _type(t), declarationPoint(v) {
 	}
 
 	ScopeElement::ScopeElement(Scope *s) : scope(s), _type(nullptr), declarationPoint(nullptr) {
 	}
 
-	shared_ptr<shimmrType::Type> ScopeElement::type() {
+	shared_ptr<shimmr::type::Type> ScopeElement::type() {
 		return _type;
 	}
 
-	void ScopeElement::updateType(shared_ptr<shimmrType::Type> t) {
+	void ScopeElement::updateType(shared_ptr<shimmr::type::Type> t) {
 		_type = t;
 	}
 	
@@ -119,7 +145,7 @@ namespace shimmr {
 	UndefinedScopeElement::UndefinedScopeElement(Scope* scope, const std::string &n) : ScopeElement(scope), _name(n) {
 	}
 
-	shared_ptr<shimmrType::Type> UndefinedScopeElement::type() {
+	shared_ptr<shimmr::type::Type> UndefinedScopeElement::type() {
 		std::string msg("Undefined reference to id: ");
 		msg.append(_name);
 		return scope->typeSystem->makeError(-1,msg);
@@ -129,7 +155,7 @@ namespace shimmr {
 	DuplicateDeclaration::DuplicateDeclaration(Scope *scope, shared_ptr<ScopeElement> f,  shared_ptr<ScopeElement> s) : ScopeElement(scope), first(f), second(s) {
 	}
 
-	shared_ptr<shimmrType::Type> DuplicateDeclaration::type() {
+	shared_ptr<shimmr::type::Type> DuplicateDeclaration::type() {
 		std::string msg("Multiple declarations as [");
 		msg.append(first->type()->symbol() + "," + second->type()->symbol());
 		msg.append("]");

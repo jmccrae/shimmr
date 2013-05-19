@@ -10,8 +10,8 @@ namespace shimmr {
 	private:
 		std::shared_ptr<Scope> root;
 		Scope *current;
-		std::stack<std::shared_ptr<shimmrType::Type>> typeStack;
-		std::stack<std::shared_ptr<shimmrType::TypeValue>> typeValueStack;
+		std::stack<std::shared_ptr<shimmr::type::Type>> typeStack;
+		std::stack<std::shared_ptr<shimmr::type::TypeValue>> typeValueStack;
 		ScopeInferrer(void);
 	public:
 		~ScopeInferrer(void);

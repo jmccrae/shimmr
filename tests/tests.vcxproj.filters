@@ -30,9 +30,21 @@
     <ClCompile Include="test_checker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShimmrTestRunner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scoper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_checker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="type_axioms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

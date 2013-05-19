@@ -18,7 +18,7 @@
 
 /* begin standard C headers. */
 #include <stdio.h>
-#include <string.h>
+#include <cstring>
 #include <errno.h>
 #include <stdlib.h>
 
@@ -101,6 +101,18 @@ typedef unsigned int flex_uint32_t;
 
 #endif	/* defined (__STDC__) */
 #endif	/* ! __cplusplus */
+
+#ifdef __CYGWIN__
+char * strdup(const char * c) {
+    char* oldLocale = (char*)(malloc(strlen(c)+1));
+    if(oldLocale!=NULL) strcpy(oldLocale,c);
+    return oldLocale;
+}
+
+int fileno(FILE * f) {
+    return 0;
+}
+#endif
 
 #ifdef YY_USE_CONST
 #define yyconst const
@@ -1657,7 +1669,8 @@ extern int isatty (int );
         b->yy_bs_column = 0;
     }
 
-        b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;
+       b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;
+       
     
 	errno = oerrno;
 }

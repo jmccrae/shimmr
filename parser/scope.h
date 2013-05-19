@@ -14,24 +14,26 @@ namespace shimmr {
 
 	class ScopeElement {
 	private:
-		std::shared_ptr<shimmrType::Type> _type;
+		std::shared_ptr<shimmr::type::Type> _type;
 	protected:
 		Scope *scope;
 		ScopeElement(Scope *);
 	public:
 		Visitable *const declarationPoint;
-		ScopeElement(Scope *, std::shared_ptr<shimmrType::Type>, Visitable *);
-		virtual std::shared_ptr<shimmrType::Type> type();
-		virtual void updateType(std::shared_ptr<shimmrType::Type>);
+		ScopeElement(Scope *, std::shared_ptr<shimmr::type::Type>, Visitable *);
+		virtual std::shared_ptr<shimmr::type::Type> type();
+		virtual void updateType(std::shared_ptr<shimmr::type::Type>);
 		virtual bool isScopeValid();
 		virtual bool isDefined() { return true; }
+		std::set<std::string>& functionArgs();
+		std::set<std::string>& iteratorArgs();
 	};
 	
 	class UndefinedScopeElement : public ScopeElement {
 	public:
 		const std::string _name;
 		UndefinedScopeElement(Scope*, const std::string &n);
-		std::shared_ptr<shimmrType::Type> type();
+		std::shared_ptr<shimmr::type::Type> type();
 		virtual bool isDefined() { return false; }
 	};
 
@@ -40,7 +42,7 @@ namespace shimmr {
 		std::shared_ptr<ScopeElement> first;
 		std::shared_ptr<ScopeElement> second;
 		DuplicateDeclaration(Scope*, std::shared_ptr<ScopeElement> f,  std::shared_ptr<ScopeElement> s);
-		std::shared_ptr<shimmrType::Type> type();
+		std::shared_ptr<shimmr::type::Type> type();
 		virtual bool isScopeValid();
 		virtual bool isDefined() { return false; }
 	};
@@ -49,10 +51,12 @@ namespace shimmr {
 	{
 	private:
 		std::set<std::string> activeValues;
+		std::set<std::string> fSpecifiers;
+		std::set<std::string> lSpecifiers;
 		Scope(Scope *p);
 		int id;
 	public:
-		std::shared_ptr<shimmrType::TypeSystem> typeSystem;
+		std::shared_ptr<shimmr::type::TypeSystem> typeSystem;
 		Scope *parent;
 		std::map<std::string,std::shared_ptr<ScopeElement>> scopeElements;
 		std::map<Visitable*,std::shared_ptr<Scope>> children;
@@ -62,6 +66,10 @@ namespace shimmr {
 		void assign(std::shared_ptr<ScopeElement> elem, const std::string& name);
 		static std::shared_ptr<Scope> root();
 		virtual bool isScopeValid();
+		void addFunctionArg(const std::string& name);
+		void addIteratorArg(const std::string& name);
+		std::set<std::string>& functionArgs();
+		std::set<std::string>& iteratorArgs();
 		// Active variables are used to avoid recursive definitions
 		bool isActive(const std::string& name);
 		void setActive(const std::string& name);

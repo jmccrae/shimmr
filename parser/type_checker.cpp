@@ -9,14 +9,21 @@ using namespace std;
 
 namespace shimmr {
 
-	TypeChecker::TypeChecker(shared_ptr<Scope> s) : root(s), sys(new shimmrType::TypeSystem()) {
+#ifdef __CYGWIN__
+            string to_string(int i) {
+                stringstream ss;
+                ss << i;
+                return ss.str();
+            }
+#endif
+	TypeChecker::TypeChecker(shared_ptr<Scope> s) : root(s), sys(new shimmr::type::TypeSystem()) {
 		current = s.get();
 	}
 
 	TypeChecker::~TypeChecker() {
 	}
 
-	shared_ptr<shimmrType::Type> TypeChecker::check(Program *p, shared_ptr<Scope> s) {
+	shared_ptr<shimmr::type::Type> TypeChecker::check(Program *p, shared_ptr<Scope> s) {
 		auto checker = new TypeChecker(s);
 		p->accept(checker);
 		auto t = checker->typeStack.top();
@@ -24,18 +31,18 @@ namespace shimmr {
 		return t;
 	}
 
-	shared_ptr<shimmrType::Type> TypeChecker::visitForType(Visitable *p) {
+	shared_ptr<shimmr::type::Type> TypeChecker::visitForType(Visitable *p) {
 		p->accept(this);
 		auto type = typeStack.top();
 		typeStack.pop();
 		return type;
 	}
 		
-	std::vector<std::shared_ptr<shimmrType::Type>> TypeChecker::visitForTypeList(Visitable *p) {
+	std::vector<std::shared_ptr<shimmr::type::Type>> TypeChecker::visitForTypeList(Visitable *p) {
 		int i = typeStack.size();
 		p->accept(this);
 		const int end = typeStack.size();
-		vector<shared_ptr<shimmrType::Type>> typeList;
+		vector<shared_ptr<shimmr::type::Type>> typeList;
 		for(; i < end; i++) {
 			typeList.push_back(typeStack.top());
 			typeStack.pop();
@@ -44,7 +51,7 @@ namespace shimmr {
 		return typeList;
 	}
 	
-	void TypeChecker::checkSOE(const int lineNo, shared_ptr<shimmrType::Type> t1, shared_ptr<shimmrType::Type> t2, std::string msg) {
+	void TypeChecker::checkSOE(const int lineNo, shared_ptr<shimmr::type::Type> t1, shared_ptr<shimmr::type::Type> t2, std::string msg) {
 		if(!t1->isError() && !t2->isError() && !t1->isSuperclassOrEqual(t2)) {
 			string m(msg);
 			auto err = sys->makeError(lineNo,m);
@@ -52,7 +59,7 @@ namespace shimmr {
 		}
 	}
 
-	void TypeChecker::checkCollection(const int lineNo, shared_ptr<shimmrType::Type> t) {
+	void TypeChecker::checkCollection(const int lineNo, shared_ptr<shimmr::type::Type> t) {
 		if(!t->isError() && !t->isCollection()) {
 			string msg("Iteration over non-collection type");
 			msg.append(t->symbol());
@@ -61,7 +68,7 @@ namespace shimmr {
 		}
 	}
 
-	void TypeChecker::checkFunction(const int lineNo, shared_ptr<shimmrType::Type> t) {
+	void TypeChecker::checkFunction(const int lineNo, shared_ptr<shimmr::type::Type> t) {
 		if(!t->isError() && !t->isFunction()) {
 			string msg("Invocation of non-function type");
 			msg.append(t->symbol());
@@ -70,7 +77,7 @@ namespace shimmr {
 		}
 	}
 
-	void TypeChecker::follow(shared_ptr<shimmrType::Type> t) {
+	void TypeChecker::follow(shared_ptr<shimmr::type::Type> t) {
 		if(typeStack.top()->isError()) {
 			if(t->isError()) {
 				auto newErr = typeStack.top()->unify(t);
@@ -560,9 +567,9 @@ namespace shimmr {
 		follow(sys->Bool);
 	}
 
-	shared_ptr<shimmrType::Type> inferNumericResult(shared_ptr<shimmrType::TypeSystem> sys,
-		shared_ptr<shimmrType::Type> t1,
-		shared_ptr<shimmrType::Type> t2,
+	shared_ptr<shimmr::type::Type> inferNumericResult(shared_ptr<shimmr::type::TypeSystem> sys,
+		shared_ptr<shimmr::type::Type> t1,
+		shared_ptr<shimmr::type::Type> t2,
 		function<int (int,int)> iTransform,
 		function<double (double,double)> dTransform) {
 
@@ -586,8 +593,8 @@ namespace shimmr {
 			return t2;
 		} else if(t1->isRange()) {
 			if(t2->isRange()) {
-				auto _t1 = (shimmrType::RangeType*)t1.get();
-				auto _t2 = (shimmrType::RangeType*)t2.get();
+				auto _t1 = (shimmr::type::RangeType*)t1.get();
+				auto _t2 = (shimmr::type::RangeType*)t2.get();
 				int lb = min(min(iTransform(_t1->lb,_t2->lb),
 					iTransform(_t1->lb,_t2->ub)),
 					min(iTransform(_t1->ub,_t2->lb),
@@ -598,16 +605,16 @@ namespace shimmr {
 					iTransform(_t1->ub,_t2->ub)));
 				return sys->makeRange(lb,ub);
 			} else if(t2->isSet()) {
-				auto _t1 = (shimmrType::RangeType*)t1.get();
-				auto _t2 = (shimmrType::SetType*)t2.get();
-				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				auto _t1 = (shimmr::type::RangeType*)t1.get();
+				auto _t2 = (shimmr::type::SetType*)t2.get();
+				std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
 				for(auto it = _t2->values.begin(); it != _t2->values.end(); ++it) {
 					for(int i = _t1->lb; i <= _t1->ub; i++) {
-						if((*it)->litType() == shimmrType::tvtFloat) {
-							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform(i,(*it)->floatValue()));
+						if((*it)->litType() == shimmr::type::tvtFloat) {
+							auto v = make_shared<shimmr::type::FloatTypeValue>(dTransform(i,(*it)->floatValue()));
 							values.insert(v);
-						} else if((*it)->litType() == shimmrType::tvtInt) {
-							auto v = make_shared<shimmrType::IntTypeValue>(iTransform(i,(*it)->intValue()));
+						} else if((*it)->litType() == shimmr::type::tvtInt) {
+							auto v = make_shared<shimmr::type::IntTypeValue>(iTransform(i,(*it)->intValue()));
 							values.insert(v);
 						} else {
 							return sys->makeError(-1, "[INTERNAL] String found in supposedly numeric set");
@@ -620,16 +627,16 @@ namespace shimmr {
 			}
 		} else if(t1->isSet()) {
 			if(t2->isRange()) {
-				auto _t1 = (shimmrType::SetType*)t1.get();
-				auto _t2 = (shimmrType::RangeType*)t2.get();
-				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				auto _t1 = (shimmr::type::SetType*)t1.get();
+				auto _t2 = (shimmr::type::RangeType*)t2.get();
+				std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
 				for(auto it = _t1->values.begin(); it != _t1->values.end(); ++it) {
 					for(int i = _t2->lb; i <= _t2->ub; i++) {
-						if((*it)->litType() == shimmrType::tvtFloat) {
-							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it)->floatValue(),i));
+						if((*it)->litType() == shimmr::type::tvtFloat) {
+							auto v = make_shared<shimmr::type::FloatTypeValue>(dTransform((*it)->floatValue(),i));
 							values.insert(v);
-						} else if((*it)->litType() == shimmrType::tvtInt) {
-							auto v = make_shared<shimmrType::IntTypeValue>(iTransform((*it)->intValue(),i));
+						} else if((*it)->litType() == shimmr::type::tvtInt) {
+							auto v = make_shared<shimmr::type::IntTypeValue>(iTransform((*it)->intValue(),i));
 							values.insert(v);
 						} else {
 							return sys->makeError(-1, "[INTERNAL] String found in supposedly numeric set");
@@ -639,22 +646,22 @@ namespace shimmr {
 				return sys->makeSet(values);
 			} else if(t2->isSet()) {
 				
-				auto _t1 = (shimmrType::SetType*)t1.get();
-				auto _t2 = (shimmrType::SetType*)t2.get();
-				std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+				auto _t1 = (shimmr::type::SetType*)t1.get();
+				auto _t2 = (shimmr::type::SetType*)t2.get();
+				std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
 				for(auto it1 = _t1->values.begin(); it1 != _t1->values.end(); ++it1) {
 					for(auto it2 = _t2->values.begin(); it2 != _t2->values.end(); ++it2) {
-						if((*it1)->litType() == shimmrType::tvtFloat && (*it2)->litType() == shimmrType::tvtFloat) {
-							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->floatValue()));
+						if((*it1)->litType() == shimmr::type::tvtFloat && (*it2)->litType() == shimmr::type::tvtFloat) {
+							auto v = make_shared<shimmr::type::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->floatValue()));
 							values.insert(v);
-						} else if((*it1)->litType() == shimmrType::tvtFloat && (*it2)->litType() == shimmrType::tvtInt) {
-							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->intValue()));
+						} else if((*it1)->litType() == shimmr::type::tvtFloat && (*it2)->litType() == shimmr::type::tvtInt) {
+							auto v = make_shared<shimmr::type::FloatTypeValue>(dTransform((*it1)->floatValue(),(*it2)->intValue()));
 							values.insert(v);
-						} else if((*it1)->litType() == shimmrType::tvtInt && (*it2)->litType() == shimmrType::tvtFloat) {
-							auto v = make_shared<shimmrType::FloatTypeValue>(dTransform((*it1)->intValue(),(*it2)->floatValue()));
+						} else if((*it1)->litType() == shimmr::type::tvtInt && (*it2)->litType() == shimmr::type::tvtFloat) {
+							auto v = make_shared<shimmr::type::FloatTypeValue>(dTransform((*it1)->intValue(),(*it2)->floatValue()));
 							values.insert(v);
-						} else if((*it1)->litType() == shimmrType::tvtInt && (*it2)->litType() == shimmrType::tvtInt) {
-							auto v = make_shared<shimmrType::FloatTypeValue>(iTransform((*it1)->intValue(),(*it2)->intValue()));
+						} else if((*it1)->litType() == shimmr::type::tvtInt && (*it2)->litType() == shimmr::type::tvtInt) {
+							auto v = make_shared<shimmr::type::FloatTypeValue>(iTransform((*it1)->intValue(),(*it2)->intValue()));
 							values.insert(v);
 						} else {
 							return sys->makeError(-1, "[INTERNAL] String found in supposedly numeric set");
@@ -815,7 +822,7 @@ namespace shimmr {
 			
 			checkFunction(p->line_number,elem->type());
 
-			auto ft = (shimmrType::FunctionType*)elem->type().get();
+			auto ft = (shimmr::type::FunctionType*)elem->type().get();
 
 			auto declArgTypes = ft->argTypes();
 
@@ -861,7 +868,7 @@ namespace shimmr {
 		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
 		int e = typeValueStack.size();
-		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
 		for(; i < e; i++) {
 			values.insert(typeValueStack.top());
 			typeValueStack.pop();
@@ -875,15 +882,15 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitEFloat(EFloat *p) {
-		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
-		values.insert(make_shared<shimmrType::FloatTypeValue>(p->double_));
+		std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
+		values.insert(make_shared<shimmr::type::FloatTypeValue>(p->double_));
 		typeStack.push(sys->makeSet(values));
 	}
 
 	void TypeChecker::visitEString(EString *p) {
-		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
 		string val(p->string_);
-		values.insert(make_shared<shimmrType::StringTypeValue>(p->string_));
+		values.insert(make_shared<shimmr::type::StringTypeValue>(p->string_));
 		typeStack.push(sys->makeSet(values));
 	}
 
@@ -939,7 +946,7 @@ namespace shimmr {
 		int i = typeValueStack.size();
 		p->listsettypeelem_->accept(this);
 		int e = typeValueStack.size();
-		std::set<std::shared_ptr<shimmrType::TypeValue>, decltype(shimmrType::compareTypeValue)*> values(shimmrType::compareTypeValue);
+		std::set<std::shared_ptr<shimmr::type::TypeValue>, decltype(shimmr::type::compareTypeValue)*> values(shimmr::type::compareTypeValue);
 		for(; i < e; i++) {
 			values.insert(typeValueStack.top());
 			typeValueStack.pop();
@@ -948,18 +955,18 @@ namespace shimmr {
 	}
 
 	void TypeChecker::visitEIntSTE(EIntSTE *p) {
-		auto ste = make_shared<shimmrType::IntTypeValue>(p->integer_);
+		auto ste = make_shared<shimmr::type::IntTypeValue>(p->integer_);
 		typeValueStack.push(ste);
 	}
 
 	void TypeChecker::visitEFloatSTE(EFloatSTE *p) {
-		auto ste = make_shared<shimmrType::FloatTypeValue>(p->double_);
+		auto ste = make_shared<shimmr::type::FloatTypeValue>(p->double_);
 		typeValueStack.push(ste);
 	}
 
 	void TypeChecker::visitEStringSTE(EStringSTE *p) {
 		string val(p->string_);
-		auto ste = make_shared<shimmrType::StringTypeValue>(val);
+		auto ste = make_shared<shimmr::type::StringTypeValue>(val);
 		typeValueStack.push(ste);
 	}
 

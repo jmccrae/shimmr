@@ -10,16 +10,16 @@ namespace shimmr {
 	class TypeChecker : public Visitor
 	{
 	private:
-		std::shared_ptr<shimmrType::TypeSystem> sys;
+		std::shared_ptr<shimmr::type::TypeSystem> sys;
 		std::shared_ptr<Scope> root;
 		Scope *current;
-		std::stack<std::shared_ptr<shimmrType::Type>> typeStack;
-		std::stack<std::shared_ptr<shimmrType::TypeValue>> typeValueStack;
+		std::stack<std::shared_ptr<shimmr::type::Type>> typeStack;
+		std::stack<std::shared_ptr<shimmr::type::TypeValue>> typeValueStack;
 	public:
 		TypeChecker(std::shared_ptr<Scope>);
 		~TypeChecker();
-		static std::shared_ptr<shimmrType::Type> check(Program *p, std::shared_ptr<Scope> scope);
-		std::map<Visitable*,std::shared_ptr<shimmrType::Type>> expressionTypes;
+		static std::shared_ptr<shimmr::type::Type> check(Program *p, std::shared_ptr<Scope> scope);
+		std::map<Visitable*,std::shared_ptr<shimmr::type::Type>> expressionTypes;
 
 		virtual void visitStatements(Statements *p);
 		virtual void visitStatementBlockStat(StatementBlockStat *p);
@@ -94,14 +94,14 @@ namespace shimmr {
 		// For unit testing not production!
 		int typeStackSize() { return typeStack.size(); }
 		int typeValueStackSize() { return typeValueStack.size(); }
-		std::shared_ptr<shimmrType::Type> topType() { return typeStack.top(); }
+		std::shared_ptr<shimmr::type::Type> topType() { return typeStack.top(); }
 	private:
-		std::shared_ptr<shimmrType::Type> visitForType(Visitable *);
-		std::vector<std::shared_ptr<shimmrType::Type>> visitForTypeList(Visitable *);
-		void follow(std::shared_ptr<shimmrType::Type>);
-		void checkCollection(const int lineNo, std::shared_ptr<shimmrType::Type> t);
-		void checkFunction(const int lineNo, std::shared_ptr<shimmrType::Type> t);
-		void checkSOE(const int,std::shared_ptr<shimmrType::Type>, std::shared_ptr<shimmrType::Type>, std::string msg);
+		std::shared_ptr<shimmr::type::Type> visitForType(Visitable *);
+		std::vector<std::shared_ptr<shimmr::type::Type>> visitForTypeList(Visitable *);
+		void follow(std::shared_ptr<shimmr::type::Type>);
+		void checkCollection(const int lineNo, std::shared_ptr<shimmr::type::Type> t);
+		void checkFunction(const int lineNo, std::shared_ptr<shimmr::type::Type> t);
+		void checkSOE(const int,std::shared_ptr<shimmr::type::Type>, std::shared_ptr<shimmr::type::Type>, std::string msg);
 	};
 
 }
