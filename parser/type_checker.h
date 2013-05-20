@@ -10,7 +10,6 @@ namespace shimmr {
 	class TypeChecker : public Visitor
 	{
 	private:
-		std::shared_ptr<shimmr::type::TypeSystem> sys;
 		std::shared_ptr<Scope> root;
 		Scope *current;
 		std::stack<std::shared_ptr<shimmr::type::Type>> typeStack;
@@ -20,6 +19,7 @@ namespace shimmr {
 		~TypeChecker();
 		static std::shared_ptr<shimmr::type::Type> check(Program *p, std::shared_ptr<Scope> scope);
 		std::map<Visitable*,std::shared_ptr<shimmr::type::Type>> expressionTypes;
+		std::shared_ptr<shimmr::type::TypeSystem> sys;
 
 		virtual void visitStatements(Statements *p);
 		virtual void visitStatementBlockStat(StatementBlockStat *p);

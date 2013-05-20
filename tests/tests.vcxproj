@@ -59,7 +59,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>../Debug/parser.lib;../../Visual Studio 2012/cppunit-1.12.1/src/cppunit/Debug/cppunitd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../Debug/parser.lib;../Debug/logic.lib;../../Visual Studio 2012/cppunit-1.12.1/src/cppunit/Debug/cppunitd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -83,6 +83,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="logicproc_tests.cpp" />
     <ClCompile Include="scoper.cpp" />
     <ClCompile Include="ShimmrTestRunner.cpp" />
     <ClCompile Include="tests.cpp" />
@@ -90,6 +91,7 @@
     <ClCompile Include="type_axioms.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="logicproc_tests.h" />
     <ClInclude Include="scoper.h" />
     <ClInclude Include="tests.h" />
     <ClInclude Include="test_checker.h" />

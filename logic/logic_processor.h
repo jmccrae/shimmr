@@ -49,12 +49,13 @@ namespace shimmr {
 			std::shared_ptr<Value> variable(const std::string& id);
 			std::vector<std::shared_ptr<Statement>> singlePredicate(std::shared_ptr<Statement> p);
 			// Special names;
-			static std::string IN, IDX, SOME, NONE, EQ, TRUE;
+			static std::string IN, IDX, SOME, NONE, EQ, TRUE, FALSE, OR, AND, NOT, NEQ, LT, GT, LEQ, GEQ, PLUS, MINUS, TIMES, DIVIDE, RANGE;
 			std::shared_ptr<Predicate> ERROR;
 
 		public:
 			LogicProcessor(std::shared_ptr<shimmr::type::TypeSystem>,std::shared_ptr<shimmr::Scope>,std::map<Visitable*,std::shared_ptr<shimmr::type::Type>>&);
 			~LogicProcessor();
+			StatementList statements();
 			virtual void visitStatements(Statements *p);
 			virtual void visitStatementBlockStat(StatementBlockStat *p);
 			virtual void visitListStatement(ListStatement *p);
@@ -110,7 +111,7 @@ namespace shimmr {
 			virtual void visitListSetTypeElem(ListSetTypeElem *p);
 			virtual void visitProgram(Program *p);
 			virtual void visitStatementBlock(StatementBlock *p);
-			virtual void visitStatement(Statement *p);
+			virtual void visitStatement(::Statement *p);
 			virtual void visitDecl(Decl *p);
 			virtual void visitElseBlock(ElseBlock *p);
 			virtual void visitExp(Exp *p);

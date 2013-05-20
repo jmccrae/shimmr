@@ -33,6 +33,9 @@
     <ClCompile Include="ShimmrTestRunner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="logicproc_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="type_axioms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="logicproc_tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
