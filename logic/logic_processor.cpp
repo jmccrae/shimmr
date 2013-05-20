@@ -123,12 +123,8 @@ namespace shimmr {
 
 		void LogicProcessor::visitSimpleDecl(SimpleDecl *p) {
 			auto r = visit(p->exp_);
-			StatementList stats(r->stat);
-			ValueList vals;
-			vals.push_back(variable(p->ident_));
-			vals.push_back(r->value);
-			stats.push_back(make_shared<Predicate>(EQ, vals));
-			emit(stats, unit);
+			auto stats = statementBuilder(make_shared<Predicate>(EQ,variable(p->ident_),r->value));
+			emit(stats->statements(), unit);
 		}
 
 		void LogicProcessor::visitTypedDecl(TypedDecl *p) {

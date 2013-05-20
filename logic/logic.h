@@ -15,6 +15,7 @@ namespace shimmr {
         };
 
 		typedef std::vector<std::shared_ptr<Value>> ValueList;
+		typedef std::shared_ptr<Value> ValuePtr;
 
         class LiteralValue : public Value {
         private:
@@ -42,14 +43,33 @@ namespace shimmr {
 			virtual const std::string& toString() const = 0;
         };
 		typedef std::vector<std::shared_ptr<Statement>> StatementList;
+		typedef std::shared_ptr<Statement> StatementPtr;
 
+		
+		class StatementListBuilder {
+		private:
+			StatementList list;
+		public:
+			StatementListBuilder(StatementPtr );
+			StatementListBuilder *and(StatementPtr);
+			StatementList& statements();
+			static StatementList empty;
+		};
+
+		std::shared_ptr<StatementListBuilder> statementBuilder(StatementPtr);
+		
         class Predicate : public Statement {
         private:
             const std::string _id;
-            const ValueList _values;
+            ValueList _values;
 			std::string _symbol;
+			void buildSymbol();
         public:
 			Predicate(const std::string&, const ValueList &);
+			Predicate(const std::string&);
+			Predicate(const std::string&, const ValuePtr);
+			Predicate(const std::string&, const ValuePtr, const ValuePtr);
+			Predicate(const std::string&, const ValuePtr, const ValuePtr, const ValuePtr);
             ~Predicate();
 			virtual const std::string& toString() const;
         };

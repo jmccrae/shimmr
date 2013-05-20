@@ -40,7 +40,30 @@ namespace shimmr {
             return _type;
         }
 
+		StatementListBuilder::StatementListBuilder(StatementPtr p) {
+			list.push_back(p);
+		}
+
+		StatementListBuilder* StatementListBuilder::and(StatementPtr p) {
+			list.push_back(p);
+			return this;
+		}
+
+		StatementList StatementListBuilder::empty;
+
+		StatementList& StatementListBuilder::statements() {
+			return list;
+		}
+
+		shared_ptr<StatementListBuilder> statementBuilder(StatementPtr p) {
+			return make_shared<StatementListBuilder>(p);
+		}
+
         Predicate::Predicate(const string& s, const vector<shared_ptr<Value >> &v) : _id(s), _values(v) {
+			buildSymbol();
+		}
+
+		void Predicate::buildSymbol() {
 			stringstream ss;
 			ss << _id << "(";
 			int i = 1;
@@ -54,6 +77,28 @@ namespace shimmr {
 			ss << ")";
 			_symbol = ss.str();
         }
+
+		Predicate::Predicate(const string& s) : _id(s) {
+			buildSymbol();
+		}
+
+		Predicate::Predicate(const string& s, ValuePtr p) : _id(s) {
+			_values.push_back(p);
+			buildSymbol();
+		}
+
+		Predicate::Predicate(const string& s, ValuePtr p1, ValuePtr p2) : _id(s) {
+			_values.push_back(p1);
+			_values.push_back(p2);
+			buildSymbol();
+		}
+
+		Predicate::Predicate(const string& s, ValuePtr p1, ValuePtr p2, ValuePtr p3) : _id(s) {
+			_values.push_back(p1);
+			_values.push_back(p2);
+			_values.push_back(p3);
+			buildSymbol();
+		}
 
         Predicate::~Predicate() {
 
