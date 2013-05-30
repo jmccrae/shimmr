@@ -37,15 +37,21 @@ namespace shimmr {
             virtual std::shared_ptr<shimmr::type::Type> type() const;
 			virtual const std::string toString() const;
         };
+		
+		class Disjunction;
+
+		typedef std::shared_ptr<std::vector<std::shared_ptr<Disjunction>>> DisjunctionListPtr;
+		typedef std::vector<std::shared_ptr<Disjunction>> DisjunctionList;
 
         class Statement {
 		public:
 			virtual const std::string toString() const = 0;
+			virtual DisjunctionListPtr cnf() = 0;
         };
 		typedef std::vector<std::shared_ptr<Statement>> StatementList;
 		typedef std::shared_ptr<Statement> StatementPtr;
 
-		
+
 		class StatementListBuilder {
 		private:
 			StatementList list;
@@ -62,19 +68,23 @@ namespace shimmr {
 		std::shared_ptr<StatementListBuilder> statementBuilder(StatementPtr);
 		
         class Predicate : public Statement {
-        private:
+		private:
             const std::string _id;
             ValueList _values;
-        public:
+			const bool _negative;
+		public:
 			Predicate(const std::string&, const ValueList &);
 			Predicate(const std::string&);
 			Predicate(const std::string&, const ValuePtr);
 			Predicate(const std::string&, const ValuePtr, const ValuePtr);
 			Predicate(const std::string&, const ValuePtr, const ValuePtr, const ValuePtr);
+			Predicate(const bool, const std::string&, const ValueList &);
             ~Predicate();
 			virtual const std::string toString() const;
+			DisjunctionListPtr cnf();
+			std::shared_ptr<Predicate> negate();
         };
-
+		
         class Implication : public Statement {
         private:
             StatementList _premises;
@@ -85,15 +95,17 @@ namespace shimmr {
             StatementList &premises();
             StatementList &consequences();
 			virtual const std::string toString() const;
+			DisjunctionListPtr cnf();
         };
 
-        class Disjunction : public Statement {
+        class Alternative : public Statement {
         private:
             StatementList _s1, _s2;
         public:
-            Disjunction(const StatementList &, const StatementList &);
-            ~Disjunction();
+            Alternative(const StatementList &, const StatementList &);
+            ~Alternative();
 			virtual const std::string toString() const;
+			DisjunctionListPtr cnf();
         };
 
         class OneOf : public Statement {
@@ -105,6 +117,7 @@ namespace shimmr {
             OneOf(const StatementList &, const StatementList&, const std::shared_ptr<VariableValue>);
             ~OneOf();
 			virtual const std::string toString() const;
+			DisjunctionListPtr cnf();
         };
 
         class Weight : public Statement {
@@ -115,6 +128,17 @@ namespace shimmr {
             Weight(const StatementList &, const std::shared_ptr<Value>);
             ~Weight();
 			virtual const std::string toString() const;
+			DisjunctionListPtr cnf();
         };
+		
+		class Disjunction {
+		private:
+			std::vector<std::shared_ptr<Predicate>> _predicate;
+		public:
+			Disjunction();
+			void add(std::shared_ptr<Predicate>);
+			const std::vector<std::shared_ptr<Predicate>>& predicate();
+			DisjunctionListPtr negate();
+		};
     }
 }

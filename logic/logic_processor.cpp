@@ -286,7 +286,7 @@ namespace shimmr {
 			StatementList consequences(expPred->stat);
 			consequences.push_back(make_shared<Predicate>(EQ, someValues));
 			stats.push_back(make_shared<Implication>(condStat, consequences));
-			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
+			stats.push_back(make_shared<Alternative>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
@@ -320,7 +320,7 @@ namespace shimmr {
 			StatementList consequences(expPred->stat);
 			consequences.push_back(make_shared<Predicate>(EQ, trueValues));
 			stats.push_back(make_shared<Implication>(condStat, consequences));
-			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
+			stats.push_back(make_shared<Alternative>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
@@ -353,7 +353,7 @@ namespace shimmr {
 			StatementList conseqs(expPred->stat);
 			conseqs.push_back(make_shared<Predicate>(EQ, someValues));
 			stats.push_back(make_shared<Implication>(condStat, conseqs));
-			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
+			stats.push_back(make_shared<Alternative>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
@@ -382,7 +382,7 @@ namespace shimmr {
 			StatementList conseqs(expPred->stat);
 			conseqs.push_back(make_shared<Predicate>(EQ, anon, expPred->value));
 			stats.push_back(make_shared<Implication>(condStat, conseqs));
-			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
+			stats.push_back(make_shared<Alternative>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
@@ -510,7 +510,7 @@ namespace shimmr {
 			orValues.push_back(result2->value);
 
 			StatementList stats;
-			stats.push_back(make_shared<Disjunction>(result1->stat,result2->stat));
+			stats.push_back(make_shared<Alternative>(result1->stat,result2->stat));
 			stats.push_back(make_shared<Predicate>(OR,orValues));
 
 			emit(stats,anon);
