@@ -32,7 +32,6 @@ namespace shimmr {
 
 		string LogicProcessor::IN("@in");
 		string LogicProcessor::IDX("@idx");
-		string LogicProcessor::SOME("@some");
 		string LogicProcessor::NONE("@none");
 		string LogicProcessor::EQ("@eq");
 		string LogicProcessor::TRUE("@true");
@@ -124,6 +123,7 @@ namespace shimmr {
 		void LogicProcessor::visitSimpleDecl(SimpleDecl *p) {
 			auto r = visit(p->exp_);
 			auto stats = statementBuilder(make_shared<Predicate>(EQ,variable(p->ident_),r->value));
+			stats->and(r->stat);
 			emit(stats->statements(), unit);
 		}
 
@@ -171,24 +171,24 @@ namespace shimmr {
 		void LogicProcessor::visitEFuncDecl(EFuncDecl *p) {
 			// Firstly create the predicate corresponding to calling this element
 			auto name = scope()->resolveName(p->ident_);
+			auto child = scope()->children.find(p)->second;
+			scopeStack.push(child);
 			ValueList argValues;
 			for (auto argument : *p->listargument_) {
 				argument->accept(this);
-				auto value = argumentNames[0];
+				auto value = scope()->resolveName(argumentNames[0]);
 				argValues.push_back(make_shared<VariableValue>(sys, scope()->resolve(value)->type(), value));
 				argumentNames.clear();
 			}
 			auto predicate = make_shared<Predicate>(name, argValues);
 
 			// Enter child scope and visit statement block
-			auto child = scope()->children.find(p)->second;
-			scopeStack.push(child);
 			auto r = visit(p->statementblock_);
-			scopeStack.pop();
 			// Create return value predicate
 			string returnName("!" + name);
 			auto fType = (shimmr::type::FunctionType*)scope()->resolve(p->ident_)->type().get();
 			auto var = anonVariable(returnName, fType->returnType());
+			scopeStack.pop();
 			StatementList stats(r->stat);
 			ValueList eqVals;
 			eqVals.push_back(var);
@@ -201,31 +201,31 @@ namespace shimmr {
 		}
 
 		void LogicProcessor::visitEFuncDeclWithType(EFuncDeclWithType *p) {
-			// Firstly create the predicate corresponding to calling this elemetn
+			// Firstly create the predicate corresponding to calling this element
 			auto name = scope()->resolveName(p->ident_);
+			auto child = scope()->children.find(p)->second;
+			scopeStack.push(child);
 			ValueList argValues;
 			for (auto argument : *p->listargument_) {
 				argument->accept(this);
-				auto value = argumentNames[0];
+				auto value = scope()->resolveName(argumentNames[0]);
 				argValues.push_back(make_shared<VariableValue>(sys, scope()->resolve(value)->type(), value));
 				argumentNames.clear();
 			}
 			auto predicate = make_shared<Predicate>(name, argValues);
 
 			// Enter child scope and visit statement block
-			auto child = scope()->children.find(p)->second;
-			scopeStack.push(child);
 			auto r = visit(p->statementblock_);
-			scopeStack.pop();
 			// Create return value predicate
 			string returnName("!" + name);
 			auto fType = (shimmr::type::FunctionType*)scope()->resolve(p->ident_)->type().get();
 			auto var = anonVariable(returnName, fType->returnType());
+			scopeStack.pop();
 			StatementList stats(r->stat);
-			ValueList eqValues;
-			eqValues.push_back(var);
-			eqValues.push_back(r->value);
-			stats.push_back(make_shared<Predicate>(EQ, eqValues));
+			ValueList eqVals;
+			eqVals.push_back(var);
+			eqVals.push_back(r->value);
+			stats.push_back(make_shared<Predicate>(EQ, eqVals));
 			auto predStat = singlePredicate(predicate);
 			auto impl = make_shared<Implication>(predStat, stats);
 			auto implPred = singlePredicate(impl);
@@ -235,15 +235,12 @@ namespace shimmr {
 		void LogicProcessor::visitForStatement(ForStatement *p) {
 			// x \in p->exp_ => p->statementblock_
 			auto setValue = visit(p->exp_);
-			ValueList setValues;
 
 			auto child = scope()->children.find(p)->second;
 			scopeStack.push(child);
 
 			auto counterValue = make_shared<VariableValue>(sys, scope()->resolve(p->ident_)->type(), scope()->resolveName(p->ident_));
-			setValues.push_back(counterValue);
-			setValues.push_back(setValue->value);
-			auto setPredicate = make_shared<Predicate>(IN, setValues);
+			auto setPredicate = make_shared<Predicate>(IN, setValue->value, counterValue);
 
 			auto statValue = visit(p->statementblock_);
 
@@ -253,19 +250,15 @@ namespace shimmr {
 
 			StatementList stats(setValue->stat);
 			auto setStat = singlePredicate(setPredicate);
-			stats.push_back(make_shared<Implication>(setStat, statValue->stat));
-			ValueList inValues;
-			inValues.push_back(anonValue);
-			inValues.push_back(counterValue);
-			inValues.push_back(statValue->value);
-			auto inStat = singlePredicate(make_shared<Predicate>(IN, inValues));
-			stats.push_back(make_shared<Implication>(setStat, inStat));
+			StatementList inStats(statValue->stat);
+			inStats.push_back(make_shared<Predicate>(IN,anonValue,counterValue,statValue->value));
+			stats.push_back(make_shared<Implication>(setStat, inStats));
 
 			emit(stats, anonValue);
 		}
 
 		void LogicProcessor::visitIfStatement(IfStatement *p) {
-			auto conditionPredicate = visit(p);
+			auto conditionPredicate = visit(p->exp_);
 			ValueList cpValues;
 			cpValues.push_back(conditionPredicate->value);
 			auto conditionPred = make_shared<Predicate>(TRUE, cpValues);
@@ -285,25 +278,21 @@ namespace shimmr {
 			someValues.push_back(expPred->value);
 
 			// @none(anon) v cond
-			ValueList noneValues;
-			noneValues.push_back(anon);
-
 			StatementList nonePreds;
-			nonePreds.push_back(make_shared<Predicate>(NONE, noneValues));
-			nonePreds.push_back(conditionPred);
+			nonePreds.push_back(make_shared<Predicate>(NONE, anon));
 
 			StatementList stats(conditionPredicate->stat);
 			auto condStat = singlePredicate(conditionPred);
-			auto someStat = singlePredicate(make_shared<Predicate>(SOME, someValues));
-			stats.push_back(make_shared<Implication>(condStat, expPred->stat));
-			stats.push_back(make_shared<Implication>(condStat, someStat));
+			StatementList consequences(expPred->stat);
+			consequences.push_back(make_shared<Predicate>(EQ, someValues));
+			stats.push_back(make_shared<Implication>(condStat, consequences));
 			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
 
 		void LogicProcessor::visitIfElseStatement(IfElseStatement *p) {
-			auto conditionPredicate = visit(p);
+			auto conditionPredicate = visit(p->exp_);
 			ValueList condVals;
 			condVals.push_back(conditionPredicate->value);
 			auto conditionPred = make_shared<Predicate>(TRUE, condVals);
@@ -322,26 +311,22 @@ namespace shimmr {
 			ValueList trueValues;
 			trueValues.push_back(anon);
 			trueValues.push_back(expPred->value);
-
-			ValueList falseValues;
-			falseValues.push_back(anon);
-			falseValues.push_back(elsePred->value);
-
+			
 			StatementList nonePreds(elsePred->stat);
-			nonePreds.push_back(conditionPred);
+			nonePreds.push_back(make_shared<Predicate>(EQ,anon,elsePred->value));
 
 			StatementList stats(conditionPredicate->stat);
 			auto condStat = singlePredicate(conditionPred);
-			auto eqStat = singlePredicate(make_shared<Predicate>(EQ, trueValues));
-			stats.push_back(make_shared<Implication>(condStat, expPred->stat));
-			stats.push_back(make_shared<Implication>(condStat, eqStat));
+			StatementList consequences(expPred->stat);
+			consequences.push_back(make_shared<Predicate>(EQ, trueValues));
+			stats.push_back(make_shared<Implication>(condStat, consequences));
 			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
 
 		void LogicProcessor::visitElseIfBlock(ElseIfBlock *p) {
-			auto conditionPredicate = visit(p);
+			auto conditionPredicate = visit(p->exp_);
 			ValueList cpValues;
 			cpValues.push_back(conditionPredicate->value);
 			auto conditionPred = make_shared<Predicate>(TRUE, cpValues);
@@ -360,29 +345,23 @@ namespace shimmr {
 			someValues.push_back(anon);
 			someValues.push_back(expPred->value);
 
-			// @none(anon) v cond
-			ValueList noneValues;
-			noneValues.push_back(anon);
-
 			StatementList nonePreds;
-			nonePreds.push_back(make_shared<Predicate>(NONE, noneValues));
-			nonePreds.push_back(conditionPred);
+			nonePreds.push_back(make_shared<Predicate>(NONE, anon));
 
 			StatementList stats(conditionPredicate->stat);
 			auto condStat = singlePredicate(conditionPred);
-			auto someStat = singlePredicate(make_shared<Predicate>(SOME, someValues));
-			stats.push_back(make_shared<Implication>(condStat, expPred->stat));
-			stats.push_back(make_shared<Implication>(condStat, someStat));
+			StatementList conseqs(expPred->stat);
+			conseqs.push_back(make_shared<Predicate>(EQ, someValues));
+			stats.push_back(make_shared<Implication>(condStat, conseqs));
 			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
 
 			emit(stats, anon);
 		}
 
 		void LogicProcessor::visitElseIf2Block(ElseIf2Block *p) {
-			auto conditionPredicate = visit(p);
-			ValueList condVals;
-			condVals.push_back(conditionPredicate->value);
-			auto conditionPred = make_shared<Predicate>(TRUE, condVals);
+			auto conditionPredicate = visit(p->exp_);
+
+			auto conditionPred = make_shared<Predicate>(TRUE, conditionPredicate->value);
 
 			auto child = scope()->children.find(p)->second;
 			scopeStack.push(child);
@@ -395,22 +374,14 @@ namespace shimmr {
 
 			auto anon = anonVariable(expressionTypes.find(p)->second);
 
-			ValueList trueValues;
-			trueValues.push_back(anon);
-			trueValues.push_back(expPred->value);
-
-			ValueList falseValues;
-			falseValues.push_back(anon);
-			falseValues.push_back(elsePred->value);
-
 			StatementList nonePreds(elsePred->stat);
-			nonePreds.push_back(conditionPred);
+			nonePreds.push_back(make_shared<Predicate>(EQ,anon,elsePred->value));
 
 			StatementList stats(conditionPredicate->stat);
 			auto condStat = singlePredicate(conditionPred);
-			auto eqStat = singlePredicate(make_shared<Predicate>(EQ, trueValues));
-			stats.push_back(make_shared<Implication>(condStat, expPred->stat));
-			stats.push_back(make_shared<Implication>(condStat, eqStat));
+			StatementList conseqs(expPred->stat);
+			conseqs.push_back(make_shared<Predicate>(EQ, anon, expPred->value));
+			stats.push_back(make_shared<Implication>(condStat, conseqs));
 			stats.push_back(make_shared<Disjunction>(condStat, nonePreds));
 
 			emit(stats, anon);
@@ -443,8 +414,8 @@ namespace shimmr {
 			scopeStack.push(child);
 
 			auto counterValue = make_shared<VariableValue>(sys, scope()->resolve(p->ident_)->type(), scope()->resolveName(p->ident_));
-			setValues.push_back(counterValue);
 			setValues.push_back(setValue->value);
+			setValues.push_back(counterValue);
 			auto setPredicate = make_shared<Predicate>(IN, setValues);
 
 			auto statValue = visit(p->statementblock_);
@@ -460,7 +431,7 @@ namespace shimmr {
 			someValues.push_back(anonValue);
 			someValues.push_back(statValue->value);
 
-			auto somePred = make_shared<Predicate>(SOME,someValues);
+			auto somePred = make_shared<Predicate>(EQ,someValues);
 			oneofStats.push_back(somePred);
 
 			StatementList elseStats;
@@ -481,8 +452,8 @@ namespace shimmr {
 			scopeStack.push(child);
 
 			auto counterValue = make_shared<VariableValue>(sys, scope()->resolve(p->ident_)->type(), scope()->resolveName(p->ident_));
-			setValues.push_back(counterValue);
 			setValues.push_back(setValue->value);
+			setValues.push_back(counterValue);
 			auto setPredicate = make_shared<Predicate>(IN, setValues);
 
 			auto statValue = visit(p->statementblock_);
@@ -520,14 +491,8 @@ namespace shimmr {
 			auto expResult = visit(p->exp_1);
 			StatementList stats(wtResult->stat);
 			stats.push_back(make_shared<Weight>(expResult->stat,wtResult->value));
-
-			auto anonValue = anonVariable(expressionTypes.find(p)->second);
-			ValueList someValues;
-			someValues.push_back(anonValue);
-			someValues.push_back(expResult->value);
-			stats.push_back(make_shared<Predicate>(SOME,someValues));
-
-			emit(stats,anonValue);
+			
+			emit(stats,unit);
 		}
 
 		void LogicProcessor::visitExpAsStatement(ExpAsStatement *p) {
@@ -540,9 +505,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList orValues;
+			orValues.push_back(anon);
 			orValues.push_back(result1->value);
 			orValues.push_back(result2->value);
-			orValues.push_back(anon);
 
 			StatementList stats;
 			stats.push_back(make_shared<Disjunction>(result1->stat,result2->stat));
@@ -557,9 +522,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList andValues;
+			andValues.push_back(anon);
 			andValues.push_back(result1->value);
 			andValues.push_back(result2->value);
-			andValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -574,9 +539,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 
 			StatementList stats(result1->stat);
@@ -592,9 +557,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -609,9 +574,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -627,9 +592,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -645,9 +610,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -663,9 +628,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -680,9 +645,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(expressionTypes.find(p)->second);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -697,9 +662,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(expressionTypes.find(p)->second);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -714,9 +679,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(expressionTypes.find(p)->second);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -731,9 +696,9 @@ namespace shimmr {
 			
 			auto anon = anonVariable(expressionTypes.find(p)->second);
 			ValueList eqValues;
+			eqValues.push_back(anon);
 			eqValues.push_back(result1->value);
 			eqValues.push_back(result2->value);
-			eqValues.push_back(anon);
 
 			StatementList stats(result1->stat);
 			stats.insert(stats.end(),result2->stat.begin(),result2->stat.end());
@@ -745,10 +710,10 @@ namespace shimmr {
 		void LogicProcessor::visitENot(ENot *p) {
 			auto result = visit(p->exp_);
 			
-			auto anon = anonVariable(expressionTypes.find(p)->second);
+			auto anon = anonVariable(sys->Bool);
 			ValueList eqValues;
-			eqValues.push_back(result->value);
 			eqValues.push_back(anon);
+			eqValues.push_back(result->value);
 
 			StatementList stats(result->stat);
 			stats.push_back(make_shared<Predicate>(NOT,eqValues));
@@ -768,17 +733,19 @@ namespace shimmr {
 			StatementList stats;
 			auto fname = scope()->resolveName(p->ident_);
 			ValueList argList;
+			set<string> argSpecifiers;
 			for(auto arg : *(p->listexp_)) {
 				auto result = visit(arg);
 				stats.insert(stats.end(),result->stat.begin(),result->stat.end());
 				argList.push_back(result->value);
+				argSpecifiers.insert(result->value->toString());
 			}
 			auto callPred = make_shared<Predicate>(fname,argList);
 			stats.push_back(callPred);
 
 			string returnName("!" + fname);
 			auto fType = (shimmr::type::FunctionType*)scope()->resolve(p->ident_)->type().get();
-			auto var = anonVariable(returnName, fType->returnType());
+			auto var = make_shared<VariableValue>(sys, fType->returnType(), returnName, argSpecifiers);
 
 			emit(stats,var);
 		}

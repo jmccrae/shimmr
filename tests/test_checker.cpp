@@ -376,7 +376,7 @@ void CheckerTests::TCConditionalStatement() {
 	stat->accept(checker);
 	CPPUNIT_ASSERT_EQUAL(1,checker->typeStackSize());
 	CPPUNIT_ASSERT_EQUAL(0,checker->typeValueStackSize());
-	CPPUNIT_ASSERT_EQUAL((string)"Bool|Null",checker->topType()->symbol());
+	CPPUNIT_ASSERT_EQUAL((string)"Unit",checker->topType()->symbol());
 	delete stat;
 	delete checker;
 

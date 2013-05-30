@@ -15,12 +15,13 @@ namespace shimmr {
 	class ScopeElement {
 	private:
 		std::shared_ptr<shimmr::type::Type> _type;
+		const bool isFunctionArg;
 	protected:
 		Scope *scope;
 		ScopeElement(Scope *);
 	public:
 		Visitable *const declarationPoint;
-		ScopeElement(Scope *, std::shared_ptr<shimmr::type::Type>, Visitable *);
+		ScopeElement(Scope *, std::shared_ptr<shimmr::type::Type>, Visitable *, bool);
 		virtual std::shared_ptr<shimmr::type::Type> type();
 		virtual void updateType(std::shared_ptr<shimmr::type::Type>);
 		virtual bool isScopeValid();

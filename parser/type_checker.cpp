@@ -290,7 +290,9 @@ namespace shimmr {
 		current = current->parent;
 
 		auto elseType = visitForType(p->elseblock_);
-		follow(statType->unify(elseType));
+		auto oType = statType->unify(elseType);
+		follow(oType);
+		expressionTypes[p] = oType;
 
 	}
 
@@ -307,7 +309,9 @@ namespace shimmr {
 		current = s.get();
 
 		auto statType = visitForType(p->statementblock_);
-		follow(statType->unify(sys->Null));
+		auto oType = statType->unify(sys->Null);
+		follow(oType);
+		expressionTypes[p] = oType;
 
 		current = current->parent;
 	}
@@ -327,9 +331,9 @@ namespace shimmr {
 		auto statType = visitForType(p->statementblock_);
 		current = current->parent;
 		auto elseType = visitForType(p->elseblock_);
-		follow(statType->unify(elseType));
-
-
+		auto oType = statType->unify(elseType);
+		follow(oType);
+		expressionTypes[p] = oType;
 	}
 
 	void TypeChecker::visitElseBlockStat(ElseBlockStat *p) {
@@ -364,7 +368,9 @@ namespace shimmr {
 		auto statType = visitForType(p->statementblock_);
 		follow(statType);
 		
-		follow(expType->contentType()->unify(sys->Null));
+		auto sType = expType->contentType()->unify(sys->Null);
+		follow(sType);
+		expressionTypes[p] = sType;
 
 		current = current->parent;
 	}
@@ -385,13 +391,16 @@ namespace shimmr {
 
 		auto statType = visitForType(p->statementblock_);
 		follow(statType);
+		
+		current = current->parent;
 
 		auto elseType = visitForType(p->elseblock_);
 		follow(elseType);
 
-		follow(expType->contentType()->unify(elseType));
+		auto sType = expType->contentType()->unify(elseType);
+		follow(sType);
+		expressionTypes[p] = sType;
 
-		current = current->parent;
 
 	}
 
@@ -405,9 +414,8 @@ namespace shimmr {
 			type2,
 			"Conditional statement has non-numeric with clause");
 		
-		auto type1 = visitForType(p->exp_1);
-
-		follow(type1->unify(sys->Null));
+		auto cType = sys->Unit;
+		follow(cType);
 	}
 
 	void TypeChecker::visitExpAsStatement(ExpAsStatement *p) {
@@ -700,6 +708,7 @@ namespace shimmr {
 			[](double x, double y) { return x + y; });
 
 		follow(combinedType);
+		expressionTypes[p] = combinedType;
 	}
 
 	void TypeChecker::visitESub(ESub *p) {
@@ -725,6 +734,7 @@ namespace shimmr {
 			[](double x, double y) { return x - y; });
 
 		follow(combinedType);
+		expressionTypes[p] = combinedType;
 	}
 
 	void TypeChecker::visitEMul(EMul *p) {
@@ -750,6 +760,7 @@ namespace shimmr {
 			[](double x, double y) { return x * y; });
 
 		follow(combinedType);
+		expressionTypes[p] = combinedType;
 	}
 
 	void TypeChecker::visitEDiv(EDiv *p) {
@@ -775,6 +786,7 @@ namespace shimmr {
 			[](double x, double y) { return x / y; });
 
 		follow(combinedType);
+		expressionTypes[p] = combinedType;
 	}
 
 	void TypeChecker::visitENot(ENot *p) {
@@ -860,7 +872,9 @@ namespace shimmr {
 			typeStack.push(sys->makeError(p->line_number,"Range has smaller lower bound than upper bound"));
 		} else {
 			auto range = sys->makeRange(p->integer_1,p->integer_2);
-			typeStack.push(sys->makeVector(range,range));
+			auto vType = sys->makeVector(range,range);
+			typeStack.push(vType);
+			expressionTypes[p] = vType;
 		}
 	}
 		
@@ -874,7 +888,9 @@ namespace shimmr {
 			typeValueStack.pop();
 		}
 		auto set = sys->makeSet(values);
-		typeStack.push(sys->makeVector(set,set));
+		auto vType = sys->makeVector(set,set);
+		typeStack.push(vType);
+		expressionTypes[p] = vType;
 	}
 
 	void TypeChecker::visitEInt(EInt *p) {

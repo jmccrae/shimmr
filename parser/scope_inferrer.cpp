@@ -45,7 +45,7 @@ namespace shimmr {
 
     void ScopeInferrer::visitSimpleDecl(SimpleDecl *p) {
         string varName(p->ident_);
-        auto elem = make_shared<ScopeElement>(current, nullptr, p);
+        auto elem = make_shared<ScopeElement>(current, nullptr, p, false);
         current->assign(elem, varName);
         p->exp_->accept(this);
     }
@@ -55,14 +55,14 @@ namespace shimmr {
         p->type_->accept(this);
         auto type = typeStack.top();
         typeStack.pop();
-        auto elem = make_shared<ScopeElement>(current, type, p);
+        auto elem = make_shared<ScopeElement>(current, type, p, false);
         current->assign(elem, varName);
         p->exp_->accept(this);
     }
 
     void ScopeInferrer::visitSimpleDeclWith(SimpleDeclWith *p) {
         string varName(p->ident_);
-        auto elem = make_shared<ScopeElement>(current, nullptr, p);
+        auto elem = make_shared<ScopeElement>(current, nullptr, p, false);
         current->assign(elem, varName);
         p->exp_1->accept(this);
         p->exp_2->accept(this);
@@ -73,7 +73,7 @@ namespace shimmr {
         p->type_->accept(this);
         auto type = typeStack.top();
         typeStack.pop();
-        auto elem = make_shared<ScopeElement>(current, type, p);
+        auto elem = make_shared<ScopeElement>(current, type, p, false);
         current->assign(elem, varName);
         p->exp_1->accept(this);
         p->exp_2->accept(this);
@@ -84,13 +84,13 @@ namespace shimmr {
         p->type_->accept(this);
         auto type = typeStack.top();
         typeStack.pop();
-        auto elem = make_shared<ScopeElement>(current, type, p);
+        auto elem = make_shared<ScopeElement>(current, type, p, false);
         current->assign(elem, varName);
     }
 
     void ScopeInferrer::visitEFuncDecl(EFuncDecl *p) {
         string varName(p->ident_);
-        auto elem = make_shared<ScopeElement>(current, nullptr, p);
+        auto elem = make_shared<ScopeElement>(current, nullptr, p, false);
         current->assign(elem, varName);
 
         auto s = current->makeChildScope(p);
@@ -121,7 +121,7 @@ namespace shimmr {
         }
         reverse(argList.begin(), argList.end());
         auto type = current->typeSystem->makeFunction(retType, argList);
-        auto elem = make_shared<ScopeElement>(current, type, p);
+        auto elem = make_shared<ScopeElement>(current, type, p, false);
         p->statementblock_->accept(this);
         current = current->parent;
 
@@ -133,7 +133,7 @@ namespace shimmr {
         auto s = current->makeChildScope(p);
         current = s.get();
 
-        auto elem = make_shared<ScopeElement>(current, nullptr, p);
+        auto elem = make_shared<ScopeElement>(current, nullptr, p, false);
         string varName(p->ident_);
         current->assign(elem, varName);
         auto fullName = current->resolveName(varName);
@@ -194,7 +194,7 @@ namespace shimmr {
         auto s = current->makeChildScope(p);
         current = s.get();
 
-        auto elem = make_shared<ScopeElement>(current, nullptr, p);
+        auto elem = make_shared<ScopeElement>(current, nullptr, p, false);
         string varName(p->ident_);
         current->assign(elem, varName);
 
@@ -207,7 +207,7 @@ namespace shimmr {
         auto s = current->makeChildScope(p);
         current = s.get();
 
-        auto elem = make_shared<ScopeElement>(current, nullptr, p);
+        auto elem = make_shared<ScopeElement>(current, nullptr, p, false);
         string varName(p->ident_);
         current->assign(elem, varName);
 
@@ -324,7 +324,7 @@ namespace shimmr {
         string varName(p->ident_);
         p->type_->accept(this);
         auto type = typeStack.top();
-        auto elem = make_shared<ScopeElement>(current, type, p);
+        auto elem = make_shared<ScopeElement>(current, type, p, true);
         current->assign(elem, varName);
         current->addFunctionArg(current->resolveName(p->ident_));
     }

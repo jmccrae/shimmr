@@ -18,7 +18,7 @@ namespace shimmr {
             return _value->type(sys);
         }
 
-		const string& LiteralValue::toString() const {
+		const string LiteralValue::toString() const {
 			return _value->symbol();
 		}
 
@@ -32,8 +32,22 @@ namespace shimmr {
 
         }
 
-		const string& VariableValue::toString() const {
-			return _id;
+		const string VariableValue::toString() const {
+			stringstream ss;
+			ss << _id;
+			if(!_specifiers.empty()) {
+				ss << "[";
+				int i = 1;
+				for(auto it : _specifiers) {
+					ss << it;
+					if(i != _specifiers.size()) {
+						ss << ",";
+					}
+					i++;
+				}
+				ss << "]";
+			}
+			return ss.str();
 		}
 
         shared_ptr<shimmr::type::Type> VariableValue::type() const {
@@ -44,9 +58,18 @@ namespace shimmr {
 			list.push_back(p);
 		}
 
-		StatementListBuilder* StatementListBuilder::and(StatementPtr p) {
+		std::shared_ptr<StatementListBuilder> StatementListBuilder::and(StatementPtr p) {
 			list.push_back(p);
-			return this;
+			return _this;
+		}
+
+		std::shared_ptr<StatementListBuilder> StatementListBuilder::and(const StatementList& l) {
+			list.insert(list.end(),l.begin(),l.end());
+			return _this;
+		}
+
+		void StatementListBuilder::setThis(shared_ptr<StatementListBuilder> p) {
+			_this = p;
 		}
 
 		StatementList StatementListBuilder::empty;
@@ -56,14 +79,15 @@ namespace shimmr {
 		}
 
 		shared_ptr<StatementListBuilder> statementBuilder(StatementPtr p) {
-			return make_shared<StatementListBuilder>(p);
+			auto ptr = make_shared<StatementListBuilder>(p);
+			ptr->setThis(ptr);
+			return ptr;
 		}
 
         Predicate::Predicate(const string& s, const vector<shared_ptr<Value >> &v) : _id(s), _values(v) {
-			buildSymbol();
 		}
 
-		void Predicate::buildSymbol() {
+		const string Predicate::toString() const {
 			stringstream ss;
 			ss << _id << "(";
 			int i = 1;
@@ -75,43 +99,40 @@ namespace shimmr {
 				i++;
 			}
 			ss << ")";
-			_symbol = ss.str();
+			return ss.str();
         }
 
 		Predicate::Predicate(const string& s) : _id(s) {
-			buildSymbol();
 		}
 
 		Predicate::Predicate(const string& s, ValuePtr p) : _id(s) {
 			_values.push_back(p);
-			buildSymbol();
 		}
 
 		Predicate::Predicate(const string& s, ValuePtr p1, ValuePtr p2) : _id(s) {
 			_values.push_back(p1);
 			_values.push_back(p2);
-			buildSymbol();
 		}
 
 		Predicate::Predicate(const string& s, ValuePtr p1, ValuePtr p2, ValuePtr p3) : _id(s) {
 			_values.push_back(p1);
 			_values.push_back(p2);
 			_values.push_back(p3);
-			buildSymbol();
 		}
 
         Predicate::~Predicate() {
 
         }
 
-		const string& Predicate::toString() const {
-			return _symbol;
-		}
 
         Implication::Implication(const vector<shared_ptr<Statement >> &p, const vector<shared_ptr<Statement >> &c) :
         _premises(p), _consequences(c) {
+		}
+
+		const string Implication::toString() const {
 			stringstream ss;
 			int i = 1;
+			ss << "(";
 			for(auto p2 : _premises) {
 				ss << p2->toString();
 				if(i != _premises.size()) {
@@ -128,7 +149,8 @@ namespace shimmr {
 				}
 				i++;
 			}
-			_symbol = ss.str();
+			ss << ")";
+			return ss.str();
         }
 
         Implication::~Implication() {
@@ -143,96 +165,92 @@ namespace shimmr {
             return _consequences;
         }
 
-		const string& Implication::toString() const {
-			return _symbol;
-		}
 
         Disjunction::Disjunction(const StatementList& s1, const StatementList& s2) :
         _s1(s1),_s2(s2) {
+		}
+		
+		const string Disjunction::toString() const {
 			stringstream ss;
 			ss << "(";
 			int i = 1;
-			for(auto s1i : s1) {
+			for(auto s1i : _s1) {
 				ss << s1i->toString();
-				if(i != s1.size()) {
+				if(i != _s1.size()) {
 					ss << " ^ ";
 				}
 				i++;
 			}
 			ss << ") v (";
-			for(auto s1i : s1) {
+			i = 1;
+			for(auto s1i : _s2) {
 				ss << s1i->toString();
-				if(i != s1.size()) {
+				if(i != _s2.size()) {
 					ss << " ^ ";
 				}
 				i++;
 			}
 			ss << ")";
-			_symbol = ss.str();
+			return ss.str();
         }
 
         Disjunction::~Disjunction() {
         }
-
-		const string& Disjunction::toString() const {
-			return _symbol;
-		}
-
+		
         OneOf::OneOf(const vector<shared_ptr<Statement >> &s, const vector<shared_ptr<Statement>>& a, const shared_ptr<VariableValue> v) :
         _elems(s), _alt(a), _quant(v) {
+		}
+
+		const string OneOf::toString() const {
 			stringstream ss;
-			ss << "O[" << v->toString() << "](";
+			ss << "O[" << _quant->toString() << "](";
 			int i = 1;
-			for(auto si : s) {
+			for(auto si : _elems) {
 				ss << si->toString();
-				if(i != s.size()) {
+				if(i != _elems.size()) {
 					ss << " ^ ";
 				}
 				i++;
 			}
 			ss << ") o (";
 			i = 1;
-			for(auto ai : a) {
+			for(auto ai : _alt) {
 				ss << ai->toString();
-				if(i != a.size()) {
+				if(i != _alt.size()) {
 					ss << " ^ ";
 				}
 				i++;
 			}
 			ss << ")";
-			_symbol = ss.str();
+			return ss.str();
 
         }
 
         OneOf::~OneOf() {
         }
 
-		const string& OneOf::toString() const {
-			return _symbol;
-		}
 
         Weight::Weight(const vector<shared_ptr<Statement >> &s, const shared_ptr<Value> w) :
         _elems(s), _weight(w) {
+		}
+
+		const string Weight::toString() const {
 			stringstream ss;
 			ss << "(";
 			int i = 1;
-			for(auto si : s) {
+			for(auto si : _elems) {
 				ss << si->toString();
-				if(i != s.size()) {
+				if(i != _elems.size()) {
 					ss << " ^ ";
 				}
 				i++;
 			}
-			ss << ") with " << w->toString();
-			_symbol = ss.str();
+			ss << ") with " << _weight->toString();
+			return ss.str();
         }
 
         Weight::~Weight() {
 
         }
-
-		const string& Weight::toString() const {
-			return _symbol;
-		}
     }
 }

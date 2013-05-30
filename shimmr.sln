@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{57244EE5-98CA-4C41-A7E5-1B40A4144CE9}"
 	ProjectSection(ProjectDependencies) = postProject
+		{06DF872F-9882-471C-9CE5-CE727010234E} = {06DF872F-9882-471C-9CE5-CE727010234E}
 		{E3BD7278-E1B1-463A-99B1-2909DA7CD06A} = {E3BD7278-E1B1-463A-99B1-2909DA7CD06A}
 	EndProjectSection
 EndProject

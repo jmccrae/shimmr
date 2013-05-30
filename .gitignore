@@ -14,4 +14,4 @@ Debug
 *.tags
 .dep.inc
 nbproject/private
-
+*.user

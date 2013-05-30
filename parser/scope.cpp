@@ -11,10 +11,11 @@ namespace shimmr {
 			typeSystem = p->typeSystem;
 			fSpecifiers.insert(p->fSpecifiers.begin(),p->fSpecifiers.end());
 			lSpecifiers.insert(p->lSpecifiers.begin(),p->lSpecifiers.end());
+			id = ++scope_counter;
 		} else {
 			typeSystem = make_shared<shimmr::type::TypeSystem>();
+			id = scope_counter = 0;
 		}
-		id = scope_counter;
 	}
 
 	std::shared_ptr<Scope> Scope::makeChildScope(Visitable *v) {
@@ -68,10 +69,10 @@ namespace shimmr {
 	}
 
 	void Scope::prelude() {
-		assign(make_shared<ScopeElement>(this,typeSystem->Bool,nullptr),"true");
-		assign(make_shared<ScopeElement>(this,typeSystem->Bool,nullptr),"false");
-		assign(make_shared<ScopeElement>(this,typeSystem->Null,nullptr),"null");
-		assign(make_shared<ScopeElement>(this,typeSystem->Unit,nullptr),"noop");
+		assign(make_shared<ScopeElement>(this,typeSystem->Bool,nullptr,false),"true");
+		assign(make_shared<ScopeElement>(this,typeSystem->Bool,nullptr,false),"false");
+		assign(make_shared<ScopeElement>(this,typeSystem->Null,nullptr,false),"null");
+		assign(make_shared<ScopeElement>(this,typeSystem->Unit,nullptr,false),"noop");
 	}
 
 	bool Scope::isActive(const std::string& name) {
@@ -113,7 +114,11 @@ namespace shimmr {
 	}
 
 	set<string>& ScopeElement::functionArgs() {
-		return scope->functionArgs();
+		if(isFunctionArg) {
+			return scope->parent->functionArgs();
+		} else {
+			return scope->functionArgs();
+		}
 	}
 
 	set<string>& Scope::iteratorArgs() {
@@ -124,10 +129,10 @@ namespace shimmr {
 		return scope->iteratorArgs();
 	}
 
-	ScopeElement::ScopeElement(Scope *s, shared_ptr<shimmr::type::Type> t, Visitable *v) : scope(s), _type(t), declarationPoint(v) {
+	ScopeElement::ScopeElement(Scope *s, shared_ptr<shimmr::type::Type> t, Visitable *v, bool fa) : scope(s), _type(t), declarationPoint(v), isFunctionArg(fa) {
 	}
 
-	ScopeElement::ScopeElement(Scope *s) : scope(s), _type(nullptr), declarationPoint(nullptr) {
+	ScopeElement::ScopeElement(Scope *s) : scope(s), _type(nullptr), declarationPoint(nullptr), isFunctionArg(false) {
 	}
 
 	shared_ptr<shimmr::type::Type> ScopeElement::type() {
