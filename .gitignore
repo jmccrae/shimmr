@@ -16,3 +16,5 @@ Debug
 nbproject/private
 *.user
 *.swp
+*.suo
+*.sdf

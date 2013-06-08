@@ -60,25 +60,32 @@ namespace shimmr {
 
 		shared_ptr<Predicate> CNF::makeWtAnon(shared_ptr<Value> v) {
 			stringstream ss;
-			ss << "@wt" << (counter++);
+			ss << "@anon" << (counter++);
+			weights[ss.str()] = v;
 			return make_shared<Predicate>(ss.str());
 		}
 
+		shared_ptr<Predicate> CNF::makeAnon() {
+			stringstream ss;
+			ss << "@anon" << (counter++);
+			return make_shared<Predicate>(ss.str());
+		}
+
+
 		DisjunctionListPtr CNF::visit(StatementPtr statement) {
 			if(statement->isOneOf()) {
-				auto os = statement->cnf(this);
+				auto os = ((OneOf*)statement.get())->cnf2(this);
+				disjunctions->insert(disjunctions->end(),os.disjunctions->begin(),os.disjunctions->end());
+				oneofs.push_back(os.oneof);
+
+				stringstream ss;
+				ss << "@anon" << (counter++);
+				auto p = make_shared<Predicate>(ss.str());
+				
 				auto dl = make_shared<DisjunctionList>();
-				for(auto o : *os) {				
-					stringstream ss;
-					ss << "@oneof" << (counter++);
-					auto p = make_shared<Predicate>(ss.str());
-					o->add(p->negate());
-					
-					disjunctions->push_back(o);
-					auto d = make_shared<Disjunction>();
-					d->add(p);
-					dl->push_back(d);
-				}
+				auto d = make_shared<Disjunction>();
+				d->add(p);
+				dl->push_back(d);
 				return dl;
 			} else {
 				return statement->cnf(this);
@@ -304,7 +311,47 @@ namespace shimmr {
 
 
 		DisjunctionListPtr OneOf::cnf(CNFPtr p) {
-			return nullptr;
+			throw "Unreachable (OneOf::cnf)";
+		}
+
+		OneOfCNF OneOf::cnf2(CNFPtr p) {
+			// First rewrite _elems to anon
+			auto neg = make_shared<DisjunctionList>();
+			auto anon = p->makeAnon();
+			auto negAnon = make_shared<Predicate>(false,anon->_id,anon->_values);
+			for(auto e : _elems) {
+				auto c = p->visit(e);
+				for(auto ci : *c) {
+					auto cin = ci->negate();
+
+					ci->add(negAnon);
+					neg->push_back(ci);
+
+					for(auto cin2 : *cin) {
+						cin2->add(anon);
+						neg->push_back(cin2);
+					}
+				}				
+			}
+			// Include alt
+			auto disjunctions = make_shared<DisjunctionList>();
+			for(auto a : _alt) {
+				auto cnfa = p->visit(a);
+				for(auto c : *cnfa) {
+					for(auto n : *neg) {
+						auto d = make_shared<Disjunction>(*c,*n);
+						disjunctions->push_back(d);
+					}
+				}
+			}
+			StatementList list1;
+			list1.push_back(anon);
+			StatementList list2;
+			auto oneof = make_shared<OneOf>(list1,list2,_quant);
+			OneOfCNF oneofCNF;
+			oneofCNF.disjunctions = disjunctions;
+			oneofCNF.oneof = oneof;
+			return oneofCNF;
 		}
 
 		Weight::Weight(const vector<shared_ptr<Statement >> &s, const shared_ptr<Value> w) :

@@ -42,6 +42,7 @@ namespace shimmr {
 		class Disjunction;
 		class Predicate;
 		class Statement;
+		class OneOf;
 
 		typedef std::shared_ptr<Statement> StatementPtr;
 		typedef std::shared_ptr<std::vector<std::shared_ptr<Disjunction>>> DisjunctionListPtr;
@@ -52,9 +53,11 @@ namespace shimmr {
 			int counter;
 			std::map<std::string,std::shared_ptr<Value>> weights;
 			DisjunctionListPtr disjunctions;
+			std::vector<std::shared_ptr<OneOf>> oneofs;
 		public:
 			CNF();
 			std::shared_ptr<Predicate> makeWtAnon(std::shared_ptr<Value>);
+			std::shared_ptr<Predicate> makeAnon();
 			DisjunctionListPtr visit(std::shared_ptr<Statement>);
 		};
 
@@ -69,11 +72,10 @@ namespace shimmr {
 		typedef std::vector<std::shared_ptr<Statement>> StatementList;
 
 		class Predicate : public Statement {
-			private:
+			public:
 				const std::string _id;
 				ValueList _values;
 				const bool _negative;
-			public:
 				Predicate(const std::string&, const ValueList &);
 				Predicate(const std::string&);
 				Predicate(const std::string&, const ValuePtr);
@@ -109,6 +111,12 @@ namespace shimmr {
 				DisjunctionListPtr cnf(CNFPtr);
 		};
 
+		class OneOfCNF {
+		public:
+			DisjunctionListPtr disjunctions;
+			std::shared_ptr<OneOf> oneof;
+		};
+
 		class OneOf : public Statement {
 			private:
 				StatementList _elems;
@@ -119,6 +127,7 @@ namespace shimmr {
 				~OneOf();
 				virtual const std::string toString() const;
 				DisjunctionListPtr cnf(CNFPtr);
+				OneOfCNF cnf2(CNFPtr);
 				bool isOneOf() { return true; }
 		};
 

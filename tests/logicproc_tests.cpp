@@ -47,7 +47,7 @@ void LogicprocTests::testEq() {
 
 void LogicprocTests::testSTE() {
 	auto logic = evaluate("val x = { \"a\", 3, 0.3 }");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @in(?1,\"a\") ^ @in(?1,3) ^ @in(?1,0.300000)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@in(?1,\"a\") ^ @in(?1,3) ^ @in(?1,0.300000) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testString() {
@@ -67,12 +67,12 @@ void LogicprocTests::testFloat() {
 
 void LogicprocTests::testRange() {
 	auto logic = evaluate("val x = 1:3");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @range(?1,1,3)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@range(?1,1,3) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testFuncCall() {
 	auto logic = evaluate("def foo(Int x) { x } ; val y = foo(3)");
-	CPPUNIT_ASSERT_EQUAL((string)"(foo@0(x@1) -> @eq(!foo@0[x@1],x@1)) ^ @eq(y@0,!foo@0[3]) ^ foo@0(3)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"(foo@0(x@1) -> @eq(!foo@0[x@1],x@1)) ^ foo@0(3) ^ @eq(y@0,!foo@0[3])",logic);
 }
 
 void LogicprocTests::testIdent() {
@@ -82,62 +82,62 @@ void LogicprocTests::testIdent() {
 
 void LogicprocTests::testNot() {
 	auto logic = evaluate("val x = !true");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @not(?1,true@0)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@not(?1,true@0) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testDiv() {
 	auto logic = evaluate("val x = 2 / 3");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @divide(?1,2,3)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@divide(?1,2,3) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testMul() {
 	auto logic = evaluate("val x = 3 * 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @times(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@times(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testSub() {
 	auto logic = evaluate("val x = 1 - 1");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @minus(?1,1,1)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@minus(?1,1,1) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testAdd() {
 	auto logic = evaluate("val x = 3 + 10");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @plus(?1,3,10)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@plus(?1,3,10) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testGT() {
 	auto logic = evaluate("val x = 3 > 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @gt(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@gt(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testLT() {
 	auto logic = evaluate("val x = 3 < 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @lt(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@lt(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testLEQ() {
 	auto logic = evaluate("val x = 3 <= 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @leq(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@leq(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testGEQ() {
 	auto logic = evaluate("val x = 3 >= 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @geq(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@geq(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testNEQ() {
 	auto logic = evaluate("val x = 3 != 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @neq(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@neq(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testAND() {
 	auto logic = evaluate("val x = 3 && 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ @and(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@and(?1,3,5) ^ @eq(x@0,?1)",logic);
 }
 
 void LogicprocTests::testOR() {
 	auto logic = evaluate("val x = 3 || 5");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(x@0,?1) ^ () v () ^ @or(?1,3,5)",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"() v () ^ @or(?1,3,5) ^ @eq(x@0,?1)",logic);
 	logic = evaluate("val Int x ; val Int y ; x = 3 || y = 5");
 	CPPUNIT_ASSERT_EQUAL((string)"(@eq(?1,x@0,3)) v (@eq(?2,y@0,5)) ^ @or(?3,?1,?2)",logic);
 }
@@ -174,7 +174,7 @@ void LogicprocTests::testIfElseIfElse() {
 
 void LogicprocTests::testIf() {
 	auto logic = evaluate("if(2 = 3) { val x = 2 * 3 ; x }");
-	CPPUNIT_ASSERT_EQUAL((string)"@eq(?1,2,3) ^ (@true(?1) -> @eq(x@2,?2) ^ @times(?2,2,3) ^ @eq(?3,x@2)) ^ (@true(?1)) v (@none(?3))",logic);
+	CPPUNIT_ASSERT_EQUAL((string)"@eq(?1,2,3) ^ (@true(?1) -> @times(?2,2,3) ^ @eq(x@2,?2) ^ @eq(?3,x@2)) ^ (@true(?1)) v (@none(?3))",logic);
 }
 
 void LogicprocTests::testIfElse() {
