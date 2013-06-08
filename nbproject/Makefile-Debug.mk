@@ -15,8 +15,8 @@ NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
 CC=gcc
-CCC=/usr/local/bin/g++
-CXX=/usr/local/bin/g++
+CCC=/usr/bin/g++
+CXX=/usr/bin/g++
 FC=gfortran
 AS=as
 

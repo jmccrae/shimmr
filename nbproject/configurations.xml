@@ -69,7 +69,7 @@
       <compileType>
         <ccTool>
           <standard>8</standard>
-          <commandlineTool>/usr/local/bin/g++</commandlineTool>
+          <commandlineTool>/usr/bin/g++</commandlineTool>
         </ccTool>
       </compileType>
       <folder path="TestFiles/f1">
