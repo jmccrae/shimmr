@@ -54,7 +54,7 @@ namespace shimmr {
 			return _type;
 		}
 
-		CNF::CNF() {
+		CNF::CNF() : counter(1) {
 
 		}
 
@@ -90,6 +90,9 @@ namespace shimmr {
 
 		const string Predicate::toString() const {
 			stringstream ss;
+			if(_negative) {
+				ss << "!";
+			}
 			ss << _id << "(";
 			int i = 1;
 			for(auto v2 : _values) {
@@ -262,6 +265,7 @@ namespace shimmr {
 						dl->push_back(make_shared<Disjunction>(*disj1,*disj2));
 					}
 				}
+				return dl;
 			}
 		}
 	
@@ -300,16 +304,7 @@ namespace shimmr {
 
 
 		DisjunctionListPtr OneOf::cnf(CNFPtr p) {
-			DisjunctionList dls;
-			for(auto elem : _elems) {
-				auto c = elem->cnf(cnf);
-				dls.insert(dls.begin(),c->begin(),c->end());
-			}
-			auto dis = makeNegativeCNF(dls,dls.begin());
-			auto d = make_shared<Disjunction>();
-			d->add(cnf->makeWtAnon(_weight));
-			dis->push_back(d);
-			return dis;
+			return nullptr;
 		}
 
 		Weight::Weight(const vector<shared_ptr<Statement >> &s, const shared_ptr<Value> w) :

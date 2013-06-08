@@ -49,7 +49,7 @@ namespace shimmr {
 
 		class CNF {
 		private:
-			int counter = 1;
+			int counter;
 			std::map<std::string,std::shared_ptr<Value>> weights;
 			DisjunctionListPtr disjunctions;
 		public:
@@ -109,11 +109,6 @@ namespace shimmr {
 				DisjunctionListPtr cnf(CNFPtr);
 		};
 
-		typedef struct {
-			DisjunctionListPtr oneOfs;
-			std::shared_ptr<Predicate> membership;
-		} OneOfCNFTemp;
-
 		class OneOf : public Statement {
 			private:
 				StatementList _elems;
@@ -124,7 +119,6 @@ namespace shimmr {
 				~OneOf();
 				virtual const std::string toString() const;
 				DisjunctionListPtr cnf(CNFPtr);
-				OneOfCNFTmp cnf2(CNFPtr);
 				bool isOneOf() { return true; }
 		};
 
