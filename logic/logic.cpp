@@ -4,33 +4,33 @@
 using namespace std;
 
 namespace shimmr {
-    namespace logic {
+	namespace logic {
 
-        Value::Value(shared_ptr<shimmr::type::TypeSystem> s) : sys(s) {
+		Value::Value(shared_ptr<shimmr::type::TypeSystem> s) : sys(s) {
 
-        }
+		}
 
-        LiteralValue::LiteralValue(shared_ptr<shimmr::type::TypeSystem> s, shared_ptr<shimmr::type::TypeValue> v) : Value(s), _value(v) {
+		LiteralValue::LiteralValue(shared_ptr<shimmr::type::TypeSystem> s, shared_ptr<shimmr::type::TypeValue> v) : Value(s), _value(v) {
 
-        }
+		}
 
-        shared_ptr<shimmr::type::Type> LiteralValue::type() const {
-            return _value->type(sys);
-        }
+		shared_ptr<shimmr::type::Type> LiteralValue::type() const {
+			return _value->type(sys);
+		}
 
 		const string LiteralValue::toString() const {
 			return _value->symbol();
 		}
 
-        VariableValue::VariableValue(shared_ptr<shimmr::type::TypeSystem> s, shared_ptr<shimmr::type::Type> t, const string& id) :
-        Value(s), _type(t), _id(id) {
+		VariableValue::VariableValue(shared_ptr<shimmr::type::TypeSystem> s, shared_ptr<shimmr::type::Type> t, const string& id) :
+			Value(s), _type(t), _id(id) {
 
-        }
+			}
 
-        VariableValue::VariableValue(shared_ptr<shimmr::type::TypeSystem> s, shared_ptr<shimmr::type::Type> t, const string& id, const set<string>& sp) :
-        Value(s), _type(t), _id(id), _specifiers(sp) {
+		VariableValue::VariableValue(shared_ptr<shimmr::type::TypeSystem> s, shared_ptr<shimmr::type::Type> t, const string& id, const set<string>& sp) :
+			Value(s), _type(t), _id(id), _specifiers(sp) {
 
-        }
+			}
 
 		const string VariableValue::toString() const {
 			stringstream ss;
@@ -50,38 +50,39 @@ namespace shimmr {
 			return ss.str();
 		}
 
-        shared_ptr<shimmr::type::Type> VariableValue::type() const {
-            return _type;
-        }
-
-		StatementListBuilder::StatementListBuilder(StatementPtr p) {
-			list.push_back(p);
+		shared_ptr<shimmr::type::Type> VariableValue::type() const {
+			return _type;
 		}
 
-		std::shared_ptr<StatementListBuilder> StatementListBuilder::and(StatementPtr p) {
-			list.push_back(p);
-			return _this;
+		CNF::CNF() {
+
 		}
 
-		std::shared_ptr<StatementListBuilder> StatementListBuilder::and(const StatementList& l) {
-			list.insert(list.end(),l.begin(),l.end());
-			return _this;
+		shared_ptr<Predicate> CNF::makeWtAnon(shared_ptr<Value> v) {
+			stringstream ss;
+			ss << "@wt" << (counter++);
+			return make_shared<Predicate>(ss.str());
 		}
 
-		void StatementListBuilder::setThis(shared_ptr<StatementListBuilder> p) {
-			_this = p;
-		}
-
-		StatementList StatementListBuilder::empty;
-
-		StatementList& StatementListBuilder::statements() {
-			return list;
-		}
-
-		shared_ptr<StatementListBuilder> statementBuilder(StatementPtr p) {
-			auto ptr = make_shared<StatementListBuilder>(p);
-			ptr->setThis(ptr);
-			return ptr;
+		DisjunctionListPtr CNF::visit(StatementPtr statement) {
+			if(statement->isOneOf()) {
+				auto os = statement->cnf(this);
+				auto dl = make_shared<DisjunctionList>();
+				for(auto o : *os) {				
+					stringstream ss;
+					ss << "@oneof" << (counter++);
+					auto p = make_shared<Predicate>(ss.str());
+					o->add(p->negate());
+					
+					disjunctions->push_back(o);
+					auto d = make_shared<Disjunction>();
+					d->add(p);
+					dl->push_back(d);
+				}
+				return dl;
+			} else {
+				return statement->cnf(this);
+			}
 		}
 
 		Predicate::Predicate(const string& s, const vector<shared_ptr<Value >> &v) : _id(s), _values(v), _negative(false) {
@@ -100,7 +101,7 @@ namespace shimmr {
 			}
 			ss << ")";
 			return ss.str();
-        }
+		}
 
 		Predicate::Predicate(const string& s) : _id(s), _negative(false) {
 		}
@@ -123,21 +124,25 @@ namespace shimmr {
 		Predicate::Predicate(const bool n, const string& s, const ValueList& vl) : _negative(n),_id(s),_values(vl) {
 		}
 
-        Predicate::~Predicate() {
+		Predicate::~Predicate() {
 
-        }
+		}
 
-		DisjunctionListPtr Predicate::cnf() {
+		DisjunctionListPtr Predicate::cnf(CNFPtr p) {
 			auto stats = make_shared<DisjunctionList>();
 			auto disj = make_shared<Disjunction>();
 			disj->add(make_shared<Predicate>(_negative,_id,_values));
 			stats->push_back(disj);
 			return stats;
 		}
-		
-        Implication::Implication(const vector<shared_ptr<Statement >> &p, const vector<shared_ptr<Statement >> &c) :
-        _premises(p), _consequences(c) {
+
+		shared_ptr<Predicate> Predicate::negate() {
+			return make_shared<Predicate>(!_negative,_id,_values);
 		}
+
+		Implication::Implication(const vector<shared_ptr<Statement >> &p, const vector<shared_ptr<Statement >> &c) :
+			_premises(p), _consequences(c) {
+			}
 
 		const string Implication::toString() const {
 			stringstream ss;
@@ -161,40 +166,40 @@ namespace shimmr {
 			}
 			ss << ")";
 			return ss.str();
-        }
+		}
 
-        Implication::~Implication() {
+		Implication::~Implication() {
 
-        }
+		}
 
-        vector<shared_ptr<Statement >> &Implication::premises() {
-            return _premises;
-        }
+		vector<shared_ptr<Statement >> &Implication::premises() {
+			return _premises;
+		}
 
-        vector<shared_ptr<Statement >> &Implication::consequences() {
-            return _consequences;
-        }
+		vector<shared_ptr<Statement >> &Implication::consequences() {
+			return _consequences;
+		}
 
-		DisjunctionListPtr Implication::cnf() {
+		DisjunctionListPtr Implication::cnf(CNFPtr cnf) {
 			auto stats = make_shared<DisjunctionList>();
 			for(auto p : _premises) {
-				auto pns = p->cnf();
+				auto pns = p->cnf(cnf);
 				for(auto pn : *pns) {
 					auto np = pn->negate();
 					stats->insert(stats->end(),np->begin(),np->end());
 				}
 			}
 			for(auto c : _consequences) {
-				auto cd = c->cnf();
+				auto cd = c->cnf(cnf);
 				stats->insert(stats->end(),cd->begin(),cd->end());
 			}
 			return stats;
 		}
 
-        Alternative::Alternative(const StatementList& s1, const StatementList& s2) :
-        _s1(s1),_s2(s2) {
-		}
-		
+		Alternative::Alternative(const StatementList& s1, const StatementList& s2) :
+			_s1(s1),_s2(s2) {
+			}
+
 		const string Alternative::toString() const {
 			stringstream ss;
 			ss << "(";
@@ -217,24 +222,24 @@ namespace shimmr {
 			}
 			ss << ")";
 			return ss.str();
-        }
+		}
 
-        Alternative::~Alternative() {
-        }
-		
-		DisjunctionListPtr Alternative::cnf() {
+		Alternative::~Alternative() {
+		}
+
+		DisjunctionListPtr Alternative::cnf(CNFPtr p) {
 			auto dlp = make_shared<DisjunctionList>();
 			for(auto s1 : _s1) {
-				auto dlp1 = s1->cnf();
+				auto dlp1 = s1->cnf(p);
 				for(auto d1 : *dlp1) {
 					for(auto s2 : _s2) {
-						auto dlp2 = s2->cnf();
+						auto dlp2 = s2->cnf(p);
 						for(auto d2 : *dlp2) {
 							auto d = make_shared<Disjunction>();
-							for(auto e1 : d1->predicate()) {
+							for(auto e1 : d1->predicates()) {
 								d->add(e1);
 							}
-							for(auto e2 : d2->predicate()) {
+							for(auto e2 : d2->predicates()) {
 								d->add(e2);
 							}
 							dlp->push_back(d);
@@ -244,10 +249,26 @@ namespace shimmr {
 			}
 			return dlp;
 		}
-
-        OneOf::OneOf(const vector<shared_ptr<Statement >> &s, const vector<shared_ptr<Statement>>& a, const shared_ptr<VariableValue> v) :
-        _elems(s), _alt(a), _quant(v) {
+		
+		DisjunctionListPtr makeNegativeCNF(DisjunctionList& dls, DisjunctionList::iterator it) {
+			if(it == dls.end()) {
+				return make_shared<DisjunctionList>();
+			} else {
+				auto negative = (*it)->negate();
+				DisjunctionListPtr dp = makeNegativeCNF(dls,++it);
+			        auto dl = make_shared<DisjunctionList>();	
+				for(auto disj2 : *negative) {
+					for(auto disj1 : *dp) {
+						dl->push_back(make_shared<Disjunction>(*disj1,*disj2));
+					}
+				}
+			}
 		}
+	
+
+		OneOf::OneOf(const vector<shared_ptr<Statement >> &s, const vector<shared_ptr<Statement>>& a, const shared_ptr<VariableValue> v) :
+			_elems(s), _alt(a), _quant(v) {
+			}
 
 		const string OneOf::toString() const {
 			stringstream ss;
@@ -272,19 +293,28 @@ namespace shimmr {
 			ss << ")";
 			return ss.str();
 
-        }
-
-        OneOf::~OneOf() {
-        }
-
-
-		DisjunctionListPtr OneOf::cnf() {
-			return nullptr;
 		}
 
-        Weight::Weight(const vector<shared_ptr<Statement >> &s, const shared_ptr<Value> w) :
-        _elems(s), _weight(w) {
+		OneOf::~OneOf() {
 		}
+
+
+		DisjunctionListPtr OneOf::cnf(CNFPtr p) {
+			DisjunctionList dls;
+			for(auto elem : _elems) {
+				auto c = elem->cnf(cnf);
+				dls.insert(dls.begin(),c->begin(),c->end());
+			}
+			auto dis = makeNegativeCNF(dls,dls.begin());
+			auto d = make_shared<Disjunction>();
+			d->add(cnf->makeWtAnon(_weight));
+			dis->push_back(d);
+			return dis;
+		}
+
+		Weight::Weight(const vector<shared_ptr<Statement >> &s, const shared_ptr<Value> w) :
+			_elems(s), _weight(w) {
+			}
 
 		const string Weight::toString() const {
 			stringstream ss;
@@ -299,14 +329,56 @@ namespace shimmr {
 			}
 			ss << ") with " << _weight->toString();
 			return ss.str();
-        }
-
-        Weight::~Weight() {
-
-        }
-
-		DisjunctionListPtr Weight::cnf() {
-			return nullptr;
 		}
-    }
+
+		Weight::~Weight() {
+
+		}
+
+		DisjunctionListPtr Weight::cnf(CNFPtr cnf) {
+			DisjunctionList dls;
+			for(auto elem : _elems) {
+				auto c = elem->cnf(cnf);
+				dls.insert(dls.begin(),c->begin(),c->end());
+			}
+			auto dis = makeNegativeCNF(dls,dls.begin());
+			auto d = make_shared<Disjunction>();
+			d->add(cnf->makeWtAnon(_weight));
+			dis->push_back(d);
+			return dis;
+		}
+		
+		Disjunction::Disjunction() {
+		}
+
+		Disjunction::Disjunction(shared_ptr<Predicate> p) {
+			_predicate.push_back(p);
+		}
+
+		Disjunction::Disjunction(const Disjunction& d) :
+			_predicate(d._predicate) {
+
+		}
+
+		Disjunction::Disjunction(const Disjunction&d1, const Disjunction& d2) : _predicate(d1._predicate) {
+			_predicate.insert(_predicate.end(),d2._predicate.begin(),d2._predicate.end());
+		}
+
+
+		void Disjunction::add(shared_ptr<Predicate> p) {
+			_predicate.push_back(p);
+		}
+
+		const vector<shared_ptr<Predicate>>& Disjunction::predicates() {
+			return _predicate;
+		}
+
+		DisjunctionListPtr Disjunction::negate() {
+			auto neg = make_shared<DisjunctionList>();
+			for(auto it : _predicate) {
+				neg->push_back(make_shared<Disjunction>(it));
+			}
+			return neg;
+		}
+	}
 }
